@@ -1,0 +1,24 @@
+title: LSASS Memory Access — Credential Dumping
+id: e6h0f4g7-8d5c-6e2h-f0g5-6i2h5d0g7e3h
+status: production
+description: Detects attempts to dump credentials from LSASS memory (Mimikatz, etc.)
+author: SOC Lab
+tags: [attack.credential_access, attack.t1003.001]
+logsource:
+  category: process_access
+  product: windows
+detection:
+  selection:
+    TargetImage|endswith: '\lsass.exe'
+    GrantedAccess:
+      - '0x1010'
+      - '0x1410'
+      - '0x147a'
+      - '0x1fffff'
+  filter:
+    SourceImage|endswith:
+      - '\MsMpEng.exe'
+      - '\csrss.exe'
+      - '\wininit.exe'
+  condition: selection and not filter
+level: critical

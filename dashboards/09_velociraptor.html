@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Velociraptor DFIR — SOC Lab</title>
+<link rel="stylesheet" href="soc-theme.css">
+</head>
+<body>
+<div class="layout">
+
+  <nav class="sidebar">
+    <div class="sidebar-logo">SOC Lab v2</div>
+    <ul class="sidebar-nav">
+      <li><a href="index.html">⌂ Portal</a></li>
+      <li><a href="01_soc_overview.html">Overview</a></li>
+      <li><a href="02_opensearch_siem.html">OpenSearch SIEM</a></li>
+      <li><a href="03_zeek_network.html">Zeek NSM</a></li>
+      <li><a href="04_suricata_ids.html">Suricata IDS</a></li>
+      <li><a href="05_ai_agents.html">AI Agents</a></li>
+      <li><a href="06_iris_cases.html">DFIR-IRIS</a></li>
+      <li><a href="07_caldera_attack.html">Caldera</a></li>
+      <li><a href="08_misp_ti.html">MISP Threat Intel</a></li>
+      <li><a href="09_velociraptor.html" class="active">Velociraptor</a></li>
+      <li><a href="10_responder_redteam.html">Red Team</a></li>
+    </ul>
+    <div class="sidebar-footer">MITRE ATT&amp;CK v14</div>
+  </nav>
+
+  <div class="main-wrap">
+    <header class="topbar">
+      <span class="topbar-title">Velociraptor — Live Forensics &amp; DFIR</span>
+      <div class="topbar-meta">
+        <span class="status-dot green"></span> 4 agents online
+      </div>
+    </header>
+
+    <main class="content">
+
+      <div class="kpi-row">
+        <div class="kpi-card"><div class="kpi-label">Online Clients</div><div class="kpi-value">4</div><div class="kpi-sub">Windows + Linux</div></div>
+        <div class="kpi-card high"><div class="kpi-label">Active Hunts</div><div class="kpi-value">2</div><div class="kpi-sub">Running now</div></div>
+        <div class="kpi-card"><div class="kpi-label">Completed</div><div class="kpi-value">7</div><div class="kpi-sub">This week</div></div>
+        <div class="kpi-card critical"><div class="kpi-label">Suspicious Procs</div><div class="kpi-value">3</div><div class="kpi-sub">Flagged for review</div></div>
+      </div>
+
+      <!-- Hunt cards -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:var(--space-4);margin-bottom:var(--space-5)">
+
+        <div class="hunt-card running">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div class="hunt-name">LSASS Access Hunt</div>
+            <span class="badge badge-accent">RUNNING</span>
+          </div>
+          <div class="hunt-meta">Windows.Memory.ProcessMemory · All Windows</div>
+          <div class="hunt-progress">
+            <div class="progress-bar" style="flex:1"><div class="progress-fill" style="width:72%"></div></div>
+            <span>72%</span>
+          </div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:4px">3/4 clients complete · 1 finding</div>
+        </div>
+
+        <div class="hunt-card complete">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div class="hunt-name">Scheduled Tasks</div>
+            <span class="badge badge-low">COMPLETE</span>
+          </div>
+          <div class="hunt-meta">Windows.System.ScheduledTasks · WIN-DC01</div>
+          <div class="hunt-progress">
+            <div class="progress-bar" style="flex:1"><div class="progress-fill" style="width:100%;background:var(--success)"></div></div>
+            <span>100%</span>
+          </div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:4px">2 suspicious tasks found</div>
+        </div>
+
+        <div class="hunt-card running">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div class="hunt-name">Network Connections</div>
+            <span class="badge badge-accent">RUNNING</span>
+          </div>
+          <div class="hunt-meta">Windows.Network.Netstat · WKSTN-FINANCE-01</div>
+          <div class="hunt-progress">
+            <div class="progress-bar" style="flex:1"><div class="progress-fill" style="width:45%"></div></div>
+            <span>45%</span>
+          </div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:4px">Scanning active connections</div>
+        </div>
+
+        <div class="hunt-card queued">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div class="hunt-name">Registry Persistence</div>
+            <span class="badge badge-medium">QUEUED</span>
+          </div>
+          <div class="hunt-meta">Windows.Registry.RunKeys · All Windows</div>
+          <div class="hunt-progress">
+            <div class="progress-bar" style="flex:1"><div class="progress-fill" style="width:0%"></div></div>
+            <span>0%</span>
+          </div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:4px">Waiting to start</div>
+        </div>
+
+      </div>
+
+      <!-- Process analysis -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">🔬 Process Analysis — WKSTN-FINANCE-01</span></div>
+        <div class="card-body">
+          <table class="data-table">
+            <thead><tr><th>PID</th><th>Name</th><th>Parent</th><th>User</th><th>Network</th><th>Risk</th></tr></thead>
+            <tbody>
+              <tr class="row-suspicious"><td class="mono">4892</td><td class="mono">svc.exe</td><td class="mono">svchost.exe</td><td>CORP\jsmith</td><td class="mono">185.220.101.45:443</td><td><span class="badge badge-critical">SUSPICIOUS</span></td></tr>
+              <tr class="row-suspicious"><td class="mono">3441</td><td class="mono">rundll32.exe</td><td class="mono">powershell.exe</td><td>CORP\jsmith</td><td>—</td><td><span class="badge badge-high">WARNING</span></td></tr>
+              <tr class="row-suspicious"><td class="mono">2108</td><td class="mono">powershell.exe</td><td class="mono">WINWORD.EXE</td><td>CORP\jsmith</td><td class="mono">185.220.101.45:80</td><td><span class="badge badge-critical">SUSPICIOUS</span></td></tr>
+              <tr><td class="mono">784</td><td class="mono">svchost.exe</td><td class="mono">services.exe</td><td>SYSTEM</td><td>—</td><td><span class="badge badge-low">CLEAN</span></td></tr>
+              <tr><td class="mono">1024</td><td class="mono">explorer.exe</td><td class="mono">userinit.exe</td><td>CORP\jsmith</td><td>—</td><td><span class="badge badge-low">CLEAN</span></td></tr>
+              <tr><td class="mono">2344</td><td class="mono">MsMpEng.exe</td><td class="mono">services.exe</td><td>SYSTEM</td><td>—</td><td><span class="badge badge-low">CLEAN</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- VQL Console -->
+      <div class="card" style="margin-top:var(--space-4)">
+        <div class="card-header">
+          <span class="card-title">⌨️ VQL Query Console</span>
+          <span class="badge badge-low">Simulated</span>
+        </div>
+        <div class="card-body">
+          <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+            <button class="btn" onclick="runVQL('pslist')">Process List</button>
+            <button class="btn" onclick="runVQL('netstat')">Netstat</button>
+            <button class="btn" onclick="runVQL('sched')">Scheduled Tasks</button>
+            <button class="btn" onclick="runVQL('reg')">Run Keys</button>
+          </div>
+          <div id="vql-out" class="log-block" style="min-height:120px">-- Select a query above to execute VQL --</div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script>
+const VQL_OUTPUT = {
+  pslist: `SELECT Pid, Ppid, Name, Username, CommandLine, CreateTime
+FROM pslist()
+WHERE Name =~ "powershell|rundll|cmd|wscript|cscript|svc\\.exe"
+
+Pid   | Ppid  | Name           | Username     | CommandLine
+------|-------|----------------|--------------|------------------------------------------
+4892  | 1240  | svc.exe        | CORP\\jsmith  | C:\\ProgramData\\svc.exe
+3441  | 2108  | rundll32.exe   | CORP\\jsmith  | rundll32.exe comsvcs.dll MiniDump ...
+2108  | 4210  | powershell.exe | CORP\\jsmith  | powershell.exe -enc SQBFAFgAIAAo...
+
+3 rows returned in 0.42s`,
+
+  netstat: `SELECT Pid, FamilyString, Type, Status, Laddr.IP, Laddr.Port, Raddr.IP, Raddr.Port
+FROM netstat()
+WHERE Status = "ESTABLISHED" AND NOT Raddr.IP =~ "^(10\\.|127\\.)"
+
+Pid   | Family | Type | Status      | Local IP     | Port | Remote IP        | Port
+------|--------|------|-------------|--------------|------|------------------|-----
+4892  | IPv4   | TCP  | ESTABLISHED | 10.0.1.50    | 52411| 185.220.101.45   | 443
+2108  | IPv4   | TCP  | ESTABLISHED | 10.0.1.50    | 49120| 185.220.101.45   | 80
+
+2 rows returned in 0.31s  ⚠ External connections flagged`,
+
+  sched: `SELECT Name, Command, Arguments, Enabled, NextRunTime
+FROM scheduled_tasks()
+WHERE Command =~ "powershell|cmd|wscript|cscript|ProgramData"
+
+Name                  | Command        | Arguments
+----------------------|----------------|-------------------------------------------
+WindowsUpdaterSvc     | powershell.exe | -w hidden -enc SQBFAFgAIAAo...
+MicrosoftEdgeUpdate   | C:\\ProgramData\\svc.exe | --persist --interval 300
+
+⚠ 2 suspicious tasks detected — created 2026-04-25 02:24 UTC`,
+
+  reg: `SELECT Key, ValueName, ValueData
+FROM read_reg_key(globs=["HKEY_USERS\\\\*\\\\Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Run"])
+
+Key                                           | ValueName         | ValueData
+----------------------------------------------|-------------------|---------------------------
+HKEY_USERS\\S-1-5-21-...\\...Run              | WindowsUpdater    | C:\\ProgramData\\svc.exe
+HKEY_USERS\\S-1-5-21-...\\...Run              | OneDriveStandalone| C:\\Users\\...\\OneDrive.exe
+
+⚠ WindowsUpdaterSvc — not a legitimate Windows entry`
+};
+
+function runVQL(q) {
+  document.getElementById('vql-out').textContent = VQL_OUTPUT[q] || '-- No output --';
+}
+</script>
+</body>
+</html>

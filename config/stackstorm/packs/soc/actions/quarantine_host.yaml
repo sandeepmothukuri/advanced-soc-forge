@@ -1,0 +1,32 @@
+---
+name: quarantine_host
+pack: soc
+runner_type: python-script
+description: >
+  Isolate a compromised endpoint by blocking all traffic except
+  DFIR/management traffic. Supports Velociraptor isolation, Windows
+  Firewall lockdown, and network switch port isolation.
+enabled: true
+entry_point: quarantine_host.py
+parameters:
+  hostname:
+    type: string
+    description: "Hostname to quarantine"
+    required: true
+  method:
+    type: string
+    description: "Isolation method: velociraptor, firewall, switch"
+    default: velociraptor
+    enum: [velociraptor, firewall, switch]
+  allow_management_ip:
+    type: string
+    description: "Management IP to keep accessible (your SOC workstation)"
+    default: ""
+  reason:
+    type: string
+    description: "Quarantine reason for audit log"
+    required: true
+  case_id:
+    type: integer
+    description: "IRIS case ID to log action against"
+    default: 0

@@ -1,0 +1,18 @@
+title: Lateral Movement via SMB
+id: h9k3i7j0-1g8f-9h5k-i3j8-9l5k8g3j0h6k
+status: production
+description: Detects lateral movement via SMB file shares
+author: SOC Lab
+tags: [attack.lateral_movement, attack.t1021.002]
+logsource:
+  category: network_connection
+  product: windows
+detection:
+  selection:
+    EventID: 3
+    DestinationPort: 445
+    Initiated: 'true'
+  filter:
+    Image|endswith: ['\explorer.exe', '\svchost.exe', '\System']
+  condition: selection and not filter
+level: medium

@@ -1,0 +1,14 @@
+title: Network Port Scan (Zeek detection)
+id: k2n6l0m3-4j1i-2k8n-l6m1-2o8n1j6m3k9n
+status: production
+description: Detects horizontal and vertical network scanning activity
+author: SOC Lab
+tags: [attack.discovery, attack.t1046]
+logsource:
+  category: network_connection
+  product: zeek
+detection:
+  selection:
+    note: 'Scan::Port_Scan'
+  condition: selection
+level: medium

@@ -1,0 +1,72 @@
+# Winlogbeat — Windows Event Log shipper → Vector → OpenSearch
+# Deploy on every Windows endpoint in the SOC lab
+
+winlogbeat.event_logs:
+
+  # Security events (logon, privilege, account management)
+  - name: Security
+    event_id: 4624,4625,4648,4672,4688,4689,4698,4699,4700,4701,4702,4720,4722,4728,4732,4756,4946,5140,5145
+    processors:
+      - add_fields:
+          target: soc
+          fields:
+            log_source: windows_security
+            sensor_type: endpoint
+
+  # Sysmon (EventID 1-26)
+  - name: Microsoft-Windows-Sysmon/Operational
+    processors:
+      - add_fields:
+          target: soc
+          fields:
+            log_source: windows_sysmon
+            sensor_type: endpoint
+
+  # PowerShell script block logging (EventID 4104)
+  - name: Microsoft-Windows-PowerShell/Operational
+    event_id: 4104,4105,4106
+    processors:
+      - add_fields:
+          target: soc
+          fields:
+            log_source: windows_powershell
+            sensor_type: endpoint
+
+  # Windows Defender (EventID 1116 = malware detected, 1117 = action taken)
+  - name: Microsoft-Windows-Windows Defender/Operational
+    event_id: 1116,1117,1118,1119
+    processors:
+      - add_fields:
+          target: soc
+          fields:
+            log_source: windows_defender
+            sensor_type: endpoint
+
+  # Task Scheduler (new task creation)
+  - name: Microsoft-Windows-TaskScheduler/Operational
+    event_id: 106,140,141,200,201
+
+  # WMI activity
+  - name: Microsoft-Windows-WMI-Activity/Operational
+    event_id: 5857,5858,5859,5860,5861
+
+output.logstash:
+  hosts: ["${VECTOR_HOST:vector}:5044"]
+  ssl.enabled: false
+
+# Add hostname and environment metadata
+processors:
+  - add_host_metadata:
+      when.not.contains.tags: forwarded
+  - add_fields:
+      target: ""
+      fields:
+        environment: lab
+        soc_version: "2.0"
+
+logging.level: warning
+logging.to_files: true
+logging.files:
+  path: C:\ProgramData\winlogbeat\Logs
+  name: winlogbeat
+  keepfiles: 3

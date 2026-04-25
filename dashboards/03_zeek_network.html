@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zeek Network Monitor — SOC Lab</title>
+  <link rel="stylesheet" href="soc-theme.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="layout">
+
+  <nav class="sidebar">
+    <div class="sidebar-brand">
+      <a href="index.html" class="brand-icon" style="text-decoration:none;font-size:15px;">🛡️</a>
+      <div class="brand-text"><span class="brand-title">SOC Lab v2</span><span class="brand-sub">COMMAND CENTER</span></div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Dashboards</div>
+      <ul class="sidebar-nav">
+        <li class="nav-item"><a href="01_soc_overview.html"><span class="nav-icon">📊</span><span>SOC Overview</span></a></li>
+        <li class="nav-item"><a href="02_opensearch_siem.html"><span class="nav-icon">🔍</span><span>OpenSearch SIEM</span></a></li>
+        <li class="nav-item"><a href="03_zeek_network.html" class="active"><span class="nav-icon">🌐</span><span>Zeek Network</span></a></li>
+        <li class="nav-item"><a href="04_suricata_ids.html"><span class="nav-icon">🚨</span><span>Suricata IDS</span></a></li>
+        <li class="nav-item"><a href="05_ai_agents.html"><span class="nav-icon">🤖</span><span>AI Agents</span></a></li>
+        <li class="nav-item"><a href="06_iris_cases.html"><span class="nav-icon">📋</span><span>DFIR-IRIS</span></a></li>
+        <li class="nav-item"><a href="07_caldera_attack.html"><span class="nav-icon">⚔️</span><span>Caldera</span></a></li>
+        <li class="nav-item"><a href="08_misp_ti.html"><span class="nav-icon">🌍</span><span>MISP Intel</span></a></li>
+        <li class="nav-item"><a href="09_velociraptor.html"><span class="nav-icon">🦖</span><span>Velociraptor</span></a></li>
+        <li class="nav-item"><a href="10_responder_redteam.html"><span class="nav-icon">🎭</span><span>Responder</span></a></li>
+      </ul>
+    </div>
+    <div class="sidebar-footer">SOC Lab v2.0 · OSS</div>
+  </nav>
+
+  <header class="topbar">
+    <div class="topbar-title"><span class="page-icon">🌐</span> Zeek Network Monitor</div>
+    <span class="topbar-meta">Zeek 6.0 · network_mode: host · interface eth0</span>
+    <div class="topbar-right">
+      <a href="index.html" class="btn btn-ghost btn-sm">← Portal</a>
+    </div>
+  </header>
+
+  <main class="main-content">
+
+    <div class="grid-4 mb-4">
+      <div class="kpi-card info">
+        <div class="kpi-label">Connections</div>
+        <div class="kpi-value">3,847</div>
+        <div class="kpi-sub">last 1 h</div>
+      </div>
+      <div class="kpi-card high">
+        <div class="kpi-label">Notices</div>
+        <div class="kpi-value">14</div>
+        <div class="kpi-sub">policy violations</div>
+      </div>
+      <div class="kpi-card medium">
+        <div class="kpi-label">DNS Queries</div>
+        <div class="kpi-value">621</div>
+        <div class="kpi-sub">unique FQDNs</div>
+      </div>
+      <div class="kpi-card critical">
+        <div class="kpi-label">LLMNR/NBNS</div>
+        <div class="kpi-value">31</div>
+        <div class="kpi-sub">poison attempts</div>
+      </div>
+    </div>
+
+    <div class="grid-2-1 mb-4">
+      <!-- conn.log stream -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">📡 conn.log — Live Stream</span>
+          <span class="badge badge-info" id="conn-count">streaming</span>
+        </div>
+        <div class="log-block" id="conn-log" style="max-height:320px;overflow-y:auto;border:none;border-radius:0;padding:var(--space-3) var(--space-4)"></div>
+      </div>
+
+      <!-- Protocol distribution -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">📊 Protocol Mix</span>
+        </div>
+        <div class="card-body">
+          <div class="chart-wrap" style="height:270px">
+            <canvas id="protocolChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <!-- DNS anomalies -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">🔎 DNS Anomalies</span>
+          <span class="badge badge-high">6 flagged</span>
+        </div>
+        <div class="card-body" style="padding-top:var(--space-3)">
+          <table class="data-table">
+            <thead><tr><th>Query</th><th>Type</th><th>Reason</th></tr></thead>
+            <tbody>
+              <tr><td class="mono" style="max-width:180px;overflow:hidden;text-overflow:ellipsis">aGVsbG8ud29ybGQ.evil.io</td><td><span class="badge badge-neutral">TXT</span></td><td><span class="badge badge-critical">DNS Tunnel</span></td></tr>
+              <tr><td class="mono">wpad.local</td><td><span class="badge badge-neutral">A</span></td><td><span class="badge badge-high">WPAD Probe</span></td></tr>
+              <tr><td class="mono">*.onion.cab</td><td><span class="badge badge-neutral">A</span></td><td><span class="badge badge-high">Tor Relay</span></td></tr>
+              <tr><td class="mono">update.microsofft.com</td><td><span class="badge badge-neutral">A</span></td><td><span class="badge badge-medium">Typosquat</span></td></tr>
+              <tr><td class="mono">data.pastebin.com</td><td><span class="badge badge-neutral">A</span></td><td><span class="badge badge-medium">C2 Likely</span></td></tr>
+              <tr><td class="mono">c2.coba1t.ru</td><td><span class="badge badge-neutral">A</span></td><td><span class="badge badge-critical">Known C2</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- LLMNR/NBNS -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">☠️ LLMNR / NBNS Activity</span>
+          <span class="badge badge-critical">T1557.001</span>
+        </div>
+        <div class="card-body" style="padding-top:var(--space-3)">
+          <table class="data-table">
+            <thead><tr><th>Time</th><th>Victim</th><th>Poison IP</th><th>Resource</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">12:47:03</td><td class="mono">10.0.0.42</td><td class="mono">192.168.1.105</td><td>FILESERVER</td></tr>
+              <tr><td class="mono">12:44:19</td><td class="mono">10.0.0.73</td><td class="mono">192.168.1.105</td><td>PRINTSHARE</td></tr>
+              <tr><td class="mono">12:41:55</td><td class="mono">10.0.0.88</td><td class="mono">192.168.1.105</td><td>BACKUPSVR</td></tr>
+              <tr><td class="mono">12:39:10</td><td class="mono">10.0.0.15</td><td class="mono">192.168.1.105</td><td>WPAD</td></tr>
+              <tr><td class="mono">12:36:02</td><td class="mono">10.0.0.55</td><td class="mono">192.168.1.105</td><td>CORPSHARE</td></tr>
+            </tbody>
+          </table>
+          <div style="margin-top:var(--space-4);padding:var(--space-3);background:var(--critical-dim);border:1px solid rgba(239,68,68,.3);border-radius:var(--radius-sm)">
+            <div style="font-size:11px;color:var(--critical);font-weight:600;margin-bottom:4px">Mitigation Required</div>
+            <div style="font-size:11px;color:var(--text-secondary)">Disable LLMNR via GPO → Computer Config → Admin Templates → Network → DNS Client → Turn off multicast name resolution = Enabled</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+Chart.defaults.color = '#8898aa';
+Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
+Chart.defaults.font.size = 11;
+
+new Chart(document.getElementById('protocolChart').getContext('2d'), {
+  type: 'bar',
+  data: {
+    labels: ['HTTP','HTTPS','DNS','SMB','SSH','LLMNR','RDP','FTP'],
+    datasets: [{
+      label: 'Connections',
+      data: [1240, 1890, 621, 384, 127, 62, 48, 12],
+      backgroundColor: ['#3b82f6','#06b6d4','#22c55e','#f97316','#8b5cf6','#ef4444','#eab308','#64748b'],
+      borderRadius: 4, borderSkipped: false
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { display: false } },
+      y: { grid: { color: 'rgba(31,45,74,.8)' } }
+    }
+  }
+});
+
+// Simulated conn.log stream
+const CONN_LOGS = [
+  '12:47:03 10.0.0.42:52341 → 192.168.1.105:445  SMB  1.2KB  SF',
+  '12:47:01 10.0.0.73:49871 → 10.0.0.1:53        DNS  0.1KB  SF',
+  '12:46:59 10.0.0.55:50234 → 185.220.101.45:443 SSL  45KB   SF',
+  '12:46:55 10.0.0.88:51100 → 10.0.0.200:139     NBSS 0.3KB  S0',
+  '12:46:50 10.0.0.15:49230 → 10.0.0.1:5355      UDP  0.1KB  SF',
+  '12:46:45 10.0.0.42:52100 → 10.0.0.100:22      SSH  2.1KB  SF',
+  '12:46:40 10.0.0.73:50000 → 8.8.8.8:53         DNS  0.1KB  SF',
+  '12:46:35 10.0.0.200:49999 → 10.0.0.0/24:*     TCP  scan   REJ',
+];
+
+const logEl = document.getElementById('conn-log');
+logEl.innerHTML = CONN_LOGS.map(l => {
+  const cls = l.includes('REJ') ? 'log-level-crit' : l.includes('S0') ? 'log-level-warn' : '';
+  return `<span class="log-line ${cls}">${l}</span>`;
+}).join('');
+
+let idx = 0;
+setInterval(() => {
+  const l = CONN_LOGS[idx++ % CONN_LOGS.length];
+  const span = document.createElement('span');
+  span.className = 'log-line new ' + (l.includes('REJ')?'log-level-crit': l.includes('S0')?'log-level-warn':'');
+  span.textContent = l.replace(/^\d{2}:\d{2}:\d{2}/, new Date().toTimeString().slice(0,8));
+  logEl.prepend(span);
+  if (logEl.children.length > 30) logEl.removeChild(logEl.lastElementChild);
+}, 3000);
+</script>
+</body>
+</html>

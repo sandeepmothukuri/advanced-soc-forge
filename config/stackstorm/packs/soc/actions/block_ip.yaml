@@ -1,0 +1,31 @@
+---
+name: block_ip
+pack: soc
+runner_type: python-script
+description: >
+  Block a malicious IP on the perimeter firewall/iptables.
+  Supports iptables (Linux), Windows Firewall, and pfSense API.
+enabled: true
+entry_point: block_ip.py
+parameters:
+  ip_address:
+    type: string
+    description: "IPv4 or IPv6 address to block"
+    required: true
+  direction:
+    type: string
+    description: "Traffic direction: inbound, outbound, both"
+    default: both
+    enum: [inbound, outbound, both]
+  duration_hours:
+    type: integer
+    description: "Block duration in hours; 0 = permanent"
+    default: 24
+  reason:
+    type: string
+    description: "Reason for block (audit log)"
+    default: "Automated SOC block"
+  notify:
+    type: boolean
+    description: "Send Slack/Teams notification"
+    default: true

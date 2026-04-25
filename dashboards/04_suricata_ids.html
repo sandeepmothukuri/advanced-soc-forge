@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Suricata IDS — SOC Lab</title>
+<link rel="stylesheet" href="soc-theme.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="layout">
+
+  <nav class="sidebar">
+    <div class="sidebar-logo">SOC Lab v2</div>
+    <ul class="sidebar-nav">
+      <li><a href="index.html">⌂ Portal</a></li>
+      <li><a href="01_soc_overview.html">Overview</a></li>
+      <li><a href="02_opensearch_siem.html">OpenSearch SIEM</a></li>
+      <li><a href="03_zeek_network.html">Zeek NSM</a></li>
+      <li><a href="04_suricata_ids.html" class="active">Suricata IDS</a></li>
+      <li><a href="05_ai_agents.html">AI Agents</a></li>
+      <li><a href="06_iris_cases.html">DFIR-IRIS</a></li>
+      <li><a href="07_caldera_attack.html">Caldera</a></li>
+      <li><a href="08_misp_ti.html">MISP Threat Intel</a></li>
+      <li><a href="09_velociraptor.html">Velociraptor</a></li>
+      <li><a href="10_responder_redteam.html">Red Team</a></li>
+    </ul>
+    <div class="sidebar-footer">MITRE ATT&amp;CK v14</div>
+  </nav>
+
+  <div class="main-wrap">
+    <header class="topbar">
+      <span class="topbar-title">Suricata 7.0 — IDS/IPS</span>
+      <div class="topbar-meta">
+        <span class="status-dot green"></span> Engine running · EVE JSON active
+      </div>
+    </header>
+
+    <main class="content">
+
+      <div class="kpi-row">
+        <div class="kpi-card critical"><div class="kpi-label">Blocked (IPS)</div><div class="kpi-value">47</div><div class="kpi-sub">Last 60 min</div></div>
+        <div class="kpi-card high"><div class="kpi-label">Alerts (24h)</div><div class="kpi-value">1,834</div><div class="kpi-sub">↑ 22%</div></div>
+        <div class="kpi-card"><div class="kpi-label">Rules Loaded</div><div class="kpi-value">38,412</div><div class="kpi-sub">ET Open + custom</div></div>
+        <div class="kpi-card"><div class="kpi-label">Throughput</div><div class="kpi-value">2.4 Gbps</div><div class="kpi-sub">0 drops</div></div>
+      </div>
+
+      <div class="grid-2">
+
+        <!-- Live EVE JSON feed -->
+        <div class="card" style="grid-column:1/-1">
+          <div class="card-header">
+            <span class="card-title">🔴 Live EVE JSON Alert Feed</span>
+            <span class="badge badge-critical" id="alert-count">0 alerts</span>
+          </div>
+          <div class="card-body">
+            <div id="eve-feed" class="alert-feed" style="height:220px;overflow-y:auto;"></div>
+          </div>
+        </div>
+
+        <!-- Category chart -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">📊 Alert Categories</span></div>
+          <div class="card-body">
+            <div class="chart-wrap" style="height:220px">
+              <canvas id="catChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- 30-min timeline -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">⏱️ 30-min Alert Timeline</span></div>
+          <div class="card-body">
+            <div class="chart-wrap" style="height:220px">
+              <canvas id="tlChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top signatures -->
+        <div class="card" style="grid-column:1/-1">
+          <div class="card-header"><span class="card-title">🔍 Top Signatures (24h)</span></div>
+          <div class="card-body">
+            <table class="data-table">
+              <thead><tr><th>SID</th><th>Signature</th><th>Category</th><th>Count</th><th>Last Seen</th><th>Action</th></tr></thead>
+              <tbody>
+                <tr><td class="mono">2030358</td><td>ET MALWARE Cobalt Strike Beacon</td><td>Malware</td><td class="mono">34</td><td class="mono">0m ago</td><td><span class="badge badge-critical">BLOCKED</span></td></tr>
+                <tr><td class="mono">2016570</td><td>ET DNS Query to Known Sinkhole</td><td>DNS</td><td class="mono">128</td><td class="mono">2m ago</td><td><span class="badge badge-high">ALERT</span></td></tr>
+                <tr><td class="mono">2019284</td><td>ET EXPLOIT SMB EternalBlue</td><td>Exploit</td><td class="mono">7</td><td class="mono">14m ago</td><td><span class="badge badge-critical">BLOCKED</span></td></tr>
+                <tr><td class="mono">2027865</td><td>ET SCAN Nmap Service Detection</td><td>Scan</td><td class="mono">412</td><td class="mono">5m ago</td><td><span class="badge badge-medium">ALERT</span></td></tr>
+                <tr><td class="mono">2024897</td><td>ET POLICY LLMNR Poisoning</td><td>Policy</td><td class="mono">89</td><td class="mono">1m ago</td><td><span class="badge badge-high">ALERT</span></td></tr>
+                <tr><td class="mono">2013028</td><td>ET TROJAN DNS Tunnel Detected</td><td>Trojan</td><td class="mono">23</td><td class="mono">8m ago</td><td><span class="badge badge-critical">BLOCKED</span></td></tr>
+                <tr><td class="mono">2033132</td><td>ET INFO Mimikatz User-Agent</td><td>Credential</td><td class="mono">5</td><td class="mono">22m ago</td><td><span class="badge badge-critical">BLOCKED</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+// EVE JSON feed
+const ALERTS = [
+  {ts:'00:00', sev:'critical', src:'185.220.101.45', sig:'ET MALWARE Cobalt Strike Beacon', sid:'2030358', action:'BLOCKED'},
+  {ts:'00:00', sev:'high',     src:'10.0.99.15',     sig:'ET SCAN Nmap OS Detection',       sid:'2027865', action:'ALERT'},
+  {ts:'00:00', sev:'critical', src:'10.0.1.50',      sig:'ET EXPLOIT SMB EternalBlue',      sid:'2019284', action:'BLOCKED'},
+  {ts:'00:00', sev:'high',     src:'10.0.1.50',      sig:'ET POLICY LLMNR Poisoning',       sid:'2024897', action:'ALERT'},
+  {ts:'00:00', sev:'critical', src:'10.0.3.45',      sig:'ET TROJAN DNS Tunnel Detected',   sid:'2013028', action:'BLOCKED'},
+  {ts:'00:00', sev:'medium',   src:'45.132.227.89',  sig:'ET DNS Query to Known Sinkhole',  sid:'2016570', action:'ALERT'},
+  {ts:'00:00', sev:'critical', src:'10.0.1.50',      sig:'ET INFO Mimikatz User-Agent',     sid:'2033132', action:'BLOCKED'},
+];
+let count = 0;
+function addAlert() {
+  const a = ALERTS[count % ALERTS.length];
+  const now = new Date().toISOString().replace('T',' ').substring(0,19);
+  const feed = document.getElementById('eve-feed');
+  const row = document.createElement('div');
+  row.className = 'alert-row';
+  row.innerHTML = `<span class="alert-time">${now}</span><span class="badge badge-${a.sev}" style="margin:0 8px">${a.sev.toUpperCase()}</span><span style="color:var(--text-muted);margin-right:8px">${a.src}</span><span style="color:var(--text-primary);flex:1">${a.sig}</span><span class="mono" style="color:var(--text-muted);font-size:11px">SID:${a.sid}</span><span class="badge badge-${a.action==='BLOCKED'?'critical':'medium'}" style="margin-left:8px">${a.action}</span>`;
+  feed.prepend(row);
+  count++;
+  document.getElementById('alert-count').textContent = count + ' alerts';
+  if (feed.children.length > 50) feed.lastChild.remove();
+}
+for (let i=0;i<6;i++) addAlert();
+setInterval(addAlert, 7000);
+
+// Category chart
+new Chart(document.getElementById('catChart'), {
+  type:'bar',
+  data:{
+    labels:['Malware','Scan','Exploit','Policy','Trojan','Credential','DNS'],
+    datasets:[{
+      data:[412,834,120,234,89,45,100],
+      backgroundColor:['#ef4444','#f97316','#eab308','#3b82f6','#8b5cf6','#ec4899','#06b6d4'],
+      borderRadius:3, borderSkipped:false
+    }]
+  },
+  options:{
+    indexAxis:'y',
+    responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{
+      x:{ticks:{color:'#94a3b8',font:{size:10}}, grid:{color:'rgba(255,255,255,0.05)'}},
+      y:{ticks:{color:'#e2e8f0',font:{size:10}}, grid:{display:false}}
+    }
+  }
+});
+
+// 30-min timeline
+const labels30 = Array.from({length:30}, (_,i) => i % 5 === 0 ? `-${30-i}m` : '');
+const data30   = Array.from({length:30}, () => Math.floor(Math.random()*80+10));
+new Chart(document.getElementById('tlChart'), {
+  type:'bar',
+  data:{
+    labels:labels30,
+    datasets:[{
+      label:'Alerts',
+      data:data30,
+      backgroundColor:'rgba(239,68,68,0.6)',
+      borderRadius:3, borderSkipped:false
+    }]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{
+      x:{ticks:{color:'#94a3b8',font:{size:10}}, grid:{display:false}},
+      y:{ticks:{color:'#94a3b8',font:{size:10}}, grid:{color:'rgba(255,255,255,0.05)'}}
+    }
+  }
+});
+</script>
+</body>
+</html>

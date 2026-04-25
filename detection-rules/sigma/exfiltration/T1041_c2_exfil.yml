@@ -1,0 +1,20 @@
+title: Data Exfiltration via C2 Channel
+id: l3o7m1n4-5k2j-3l9o-m7n2-3p9o2k7n4l0o
+status: production
+description: Detects large outbound data transfers to suspicious external IPs
+author: SOC Lab
+tags: [attack.exfiltration, attack.t1041]
+logsource:
+  category: network_connection
+  product: zeek
+detection:
+  selection:
+    local_orig: true
+    local_resp: false
+    orig_bytes|gte: 5000000
+  filter:
+    resp_h|contains:
+      - '1.1.1.1'
+      - '8.8.8.8'
+  condition: selection and not filter
+level: medium

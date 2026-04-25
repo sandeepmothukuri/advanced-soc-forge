@@ -1,0 +1,15 @@
+title: Brute Force Authentication Attack
+id: f7i1g5h8-9e6d-7f3i-g1h6-7j3i6e1h8f4i
+status: production
+description: Detects repeated authentication failures indicating brute force
+author: SOC Lab
+tags: [attack.credential_access, attack.t1110]
+logsource:
+  product: windows
+  service: security
+detection:
+  selection:
+    EventID: 4625
+  timeframe: 5m
+  condition: selection | count(TargetUserName) by IpAddress > 10
+level: high

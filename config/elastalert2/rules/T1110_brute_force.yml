@@ -1,0 +1,20 @@
+name: "SOC-002 | T1110 — Brute Force Authentication Attack"
+type: frequency
+index: soc-logs-*
+num_events: 10
+timeframe: { minutes: 5 }
+realert: { minutes: 15 }
+query_key: "source.ip"
+filter:
+  - bool:
+      should:
+        - term: { "EventID": "4625" }
+        - term: { "event.type": "authentication_failure" }
+alert: ["post"]
+http_post_url: "http://stackstorm:9101/v1/webhooks/elastalert"
+http_post_payload:
+  rule_id: "SOC-002"
+  severity: "high"
+  mitre: "T1110"
+  source_ip: "%(source.ip)s"
+  count: "%(num_hits)s"

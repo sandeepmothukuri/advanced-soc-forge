@@ -1,0 +1,24 @@
+name: "SOC-006 | T1557 — LLMNR/NBT-NS Poisoning (Responder)"
+type: any
+index: soc-logs-*
+realert: { minutes: 2 }
+filter:
+  - bool:
+      should:
+        - bool:
+            must:
+              - term: { "log_type": "zeek" }
+              - term: { "proto": "udp" }
+              - term: { "resp_p": 5355 }
+        - bool:
+            must:
+              - term: { "log_type": "suricata" }
+              - wildcard: { "rule.name": "*LLMNR*" }
+              - wildcard: { "rule.name": "*responder*" }
+alert: ["post"]
+http_post_url: "http://stackstorm:9101/v1/webhooks/elastalert"
+http_post_payload:
+  rule_id: "SOC-006"
+  severity: "high"
+  mitre: "T1557.001"
+  source_ip: "%(id.orig_h)s"

@@ -1,0 +1,19 @@
+name: "SOC-005 | T1071 — C2 Beacon Detected (Suricata)"
+type: any
+index: soc-logs-*
+realert: { minutes: 5 }
+filter:
+  - bool:
+      must:
+        - term: { "log_type": "suricata" }
+        - term: { "event_type": "alert" }
+        - terms: { "rule.category": ["A Network Trojan was detected","Malware Command and Control Activity Detected","Potentially Bad Traffic"] }
+alert: ["post"]
+http_post_url: "http://stackstorm:9101/v1/webhooks/elastalert"
+http_post_payload:
+  rule_id: "SOC-005"
+  severity: "critical"
+  mitre: "T1071"
+  rule_name: "%(rule.name)s"
+  source_ip: "%(src_ip)s"
+  dest_ip: "%(dest_ip)s"

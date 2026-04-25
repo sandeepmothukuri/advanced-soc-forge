@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DFIR-IRIS Cases — SOC Lab</title>
+<link rel="stylesheet" href="soc-theme.css">
+</head>
+<body>
+<div class="layout">
+
+  <nav class="sidebar">
+    <div class="sidebar-logo">SOC Lab v2</div>
+    <ul class="sidebar-nav">
+      <li><a href="index.html">⌂ Portal</a></li>
+      <li><a href="01_soc_overview.html">Overview</a></li>
+      <li><a href="02_opensearch_siem.html">OpenSearch SIEM</a></li>
+      <li><a href="03_zeek_network.html">Zeek NSM</a></li>
+      <li><a href="04_suricata_ids.html">Suricata IDS</a></li>
+      <li><a href="05_ai_agents.html">AI Agents</a></li>
+      <li><a href="06_iris_cases.html" class="active">DFIR-IRIS</a></li>
+      <li><a href="07_caldera_attack.html">Caldera</a></li>
+      <li><a href="08_misp_ti.html">MISP Threat Intel</a></li>
+      <li><a href="09_velociraptor.html">Velociraptor</a></li>
+      <li><a href="10_responder_redteam.html">Red Team</a></li>
+    </ul>
+    <div class="sidebar-footer">MITRE ATT&amp;CK v14</div>
+  </nav>
+
+  <div class="main-wrap">
+    <header class="topbar">
+      <span class="topbar-title">DFIR-IRIS 2.4 — Case Management</span>
+      <div class="topbar-meta">
+        <span class="status-dot yellow"></span> 2 active cases
+      </div>
+    </header>
+
+    <main class="content">
+
+      <div class="kpi-row">
+        <div class="kpi-card critical"><div class="kpi-label">Open Cases</div><div class="kpi-value">2</div><div class="kpi-sub">Escalated</div></div>
+        <div class="kpi-card high"><div class="kpi-label">In Progress</div><div class="kpi-value">1</div><div class="kpi-sub">Analyst assigned</div></div>
+        <div class="kpi-card"><div class="kpi-label">Closed (30d)</div><div class="kpi-value">14</div><div class="kpi-sub">Avg MTTR: 4.2h</div></div>
+        <div class="kpi-card"><div class="kpi-label">IOCs Tracked</div><div class="kpi-value">47</div><div class="kpi-sub">Across all cases</div></div>
+      </div>
+
+      <!-- Case Cards -->
+      <div class="grid-2">
+
+        <div class="case-card open">
+          <div class="flex items-center gap-3">
+            <span class="badge badge-critical">CRITICAL</span>
+            <span style="color:var(--text-primary);font-weight:600">INC-2026-001 · APT-29 Intrusion</span>
+          </div>
+          <div style="color:var(--text-muted);font-size:13px;margin:8px 0">Opened: 2026-04-25 02:14 UTC · Analyst: jsmith</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <span class="technique-tag">T1566.001</span>
+            <span class="technique-tag">T1059.001</span>
+            <span class="technique-tag">T1003.001</span>
+            <span class="technique-tag">T1021.002</span>
+            <span class="technique-tag">T1041</span>
+          </div>
+          <div style="margin-top:12px;color:var(--text-secondary);font-size:13px">
+            13-step kill chain. WKSTN-FINANCE-01 compromised. Lateral movement to SRV-HR-02 and DC-CORP-01. 4.2 GB exfiltrated.
+          </div>
+        </div>
+
+        <div class="case-card open">
+          <div class="flex items-center gap-3">
+            <span class="badge badge-high">HIGH</span>
+            <span style="color:var(--text-primary);font-weight:600">INC-2026-002 · Brute Force Campaign</span>
+          </div>
+          <div style="color:var(--text-muted);font-size:13px;margin:8px 0">Opened: 2026-04-25 03:41 UTC · Analyst: alee</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <span class="technique-tag">T1110.001</span>
+            <span class="technique-tag">T1078</span>
+          </div>
+          <div style="margin-top:12px;color:var(--text-secondary);font-size:13px">
+            Password spray from 10.0.99.15 against 38 accounts. 3 accounts locked out. Origin: internal VLAN — compromised host suspected.
+          </div>
+        </div>
+
+        <div class="case-card in-progress">
+          <div class="flex items-center gap-3">
+            <span class="badge badge-medium">MEDIUM</span>
+            <span style="color:var(--text-primary);font-weight:600">INC-2026-003 · Insider Threat</span>
+          </div>
+          <div style="color:var(--text-muted);font-size:13px;margin:8px 0">Opened: 2026-04-24 18:05 UTC · Analyst: bwilliams</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <span class="technique-tag">T1039</span>
+            <span class="technique-tag">T1560.001</span>
+            <span class="technique-tag">T1567.002</span>
+          </div>
+          <div style="margin-top:12px;color:var(--text-secondary);font-size:13px">
+            User rchen accessed 847 legal files, created 7z archive, uploaded 2.3 GB to Dropbox outside hours. HR engaged. Evidence preserved.
+          </div>
+        </div>
+
+        <div class="case-card closed">
+          <div class="flex items-center gap-3">
+            <span class="badge badge-low">CLOSED</span>
+            <span style="color:var(--text-primary);font-weight:600">INC-2026-004 · Phishing Wave</span>
+          </div>
+          <div style="color:var(--text-muted);font-size:13px;margin:8px 0">Closed: 2026-04-23 14:30 UTC · MTTR: 3.5h</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <span class="technique-tag">T1566.001</span>
+            <span class="technique-tag">T1053.005</span>
+            <span class="technique-tag">T1547.001</span>
+          </div>
+          <div style="margin-top:12px;color:var(--text-secondary);font-size:13px">
+            12 users received malicious macro. 2 executed. Hosts reimaged. YARA rule deployed. Email gateway block updated.
+          </div>
+        </div>
+
+      </div>
+
+      <!-- INC-2026-001 Attack Timeline -->
+      <div class="card" style="margin-top:var(--space-5)">
+        <div class="card-header">
+          <span class="card-title">🕐 INC-2026-001 Attack Timeline</span>
+          <span class="badge badge-critical">IN PROGRESS</span>
+        </div>
+        <div class="card-body">
+          <div class="timeline">
+            <div class="tl-item">
+              <div class="tl-dot critical"></div>
+              <div class="tl-content">
+                <div class="tl-time">02:14 UTC</div>
+                <div class="tl-title">Spearphishing Email Delivered</div>
+                <div class="tl-desc">Malicious Office macro attachment to finance@corp.local from spoofed HR domain · <span class="technique-tag">T1566.001</span></div>
+              </div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-dot high"></div>
+              <div class="tl-content">
+                <div class="tl-time">02:19 UTC</div>
+                <div class="tl-title">PowerShell Payload Executed</div>
+                <div class="tl-desc">Encoded IEX download cradle — staged C2 implant from 185.220.101.45 · <span class="technique-tag">T1059.001</span></div>
+              </div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-dot high"></div>
+              <div class="tl-content">
+                <div class="tl-time">02:24 UTC</div>
+                <div class="tl-title">Persistence Established</div>
+                <div class="tl-desc">Scheduled task + registry run key created · <span class="technique-tag">T1053.005</span> <span class="technique-tag">T1547.001</span></div>
+              </div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-dot critical"></div>
+              <div class="tl-content">
+                <div class="tl-time">02:31 UTC</div>
+                <div class="tl-title">LSASS Dumped</div>
+                <div class="tl-desc">Credential extraction via rundll32 · Domain credentials obtained · <span class="technique-tag">T1003.001</span></div>
+              </div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-dot critical"></div>
+              <div class="tl-content">
+                <div class="tl-time">02:47 UTC</div>
+                <div class="tl-title">Lateral Movement to DC</div>
+                <div class="tl-desc">Pass-the-hash to DC-CORP-01 and SRV-HR-02 via SMB · <span class="technique-tag">T1550.002</span> <span class="technique-tag">T1021.002</span></div>
+              </div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-dot critical"></div>
+              <div class="tl-content">
+                <div class="tl-time">03:12 UTC</div>
+                <div class="tl-title">Data Exfiltration</div>
+                <div class="tl-desc">4.2 GB over HTTPS to Tor exit 185.220.101.45 · DNS tunnel C2 channel · <span class="technique-tag">T1041</span> <span class="technique-tag">T1071.004</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- IOC Tracker -->
+      <div class="card" style="margin-top:var(--space-5)">
+        <div class="card-header"><span class="card-title">🔎 IOC Tracker — INC-2026-001</span></div>
+        <div class="card-body">
+          <table class="data-table">
+            <thead><tr><th>IOC</th><th>Type</th><th>Confidence</th><th>MISP</th><th>Added</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">185.220.101.45</td><td>IP</td><td><span class="badge badge-critical">HIGH</span></td><td><span class="badge badge-low">Synced</span></td><td class="mono">02:20</td></tr>
+              <tr><td class="mono">c2.malicious-apt.net</td><td>Domain</td><td><span class="badge badge-critical">HIGH</span></td><td><span class="badge badge-low">Synced</span></td><td class="mono">03:15</td></tr>
+              <tr><td class="mono">a1b2c3d4e5f6...sha256</td><td>File Hash</td><td><span class="badge badge-high">MED</span></td><td><span class="badge badge-medium">Pending</span></td><td class="mono">02:22</td></tr>
+              <tr><td class="mono">CORP\jsmith (compromised)</td><td>Account</td><td><span class="badge badge-critical">HIGH</span></td><td>—</td><td class="mono">02:35</td></tr>
+              <tr><td class="mono">45.132.227.89</td><td>IP</td><td><span class="badge badge-high">MED</span></td><td><span class="badge badge-low">Synced</span></td><td class="mono">03:45</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+</body>
+</html>

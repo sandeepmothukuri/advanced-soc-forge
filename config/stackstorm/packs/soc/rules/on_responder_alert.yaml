@@ -1,0 +1,22 @@
+---
+name: on_responder_llmnr_alert
+pack: soc
+description: "Trigger Responder/LLMNR response when T1557 fires"
+enabled: true
+trigger:
+  type: core.st2.webhook
+  parameters:
+    url: elastalert
+criteria:
+  trigger.body.rule_name:
+    type: iequals
+    pattern: "T1557_responder"
+action:
+  ref: soc.create_incident
+  parameters:
+    title: "LLMNR Poisoning Detected — {{trigger.body.source_ip}}"
+    description: "Possible Responder tool running at {{trigger.body.source_ip}} — LLMNR/NBT-NS poisoning"
+    severity: 4
+    source_ip: "{{trigger.body.source_ip}}"
+    mitre_technique: T1557.001
+    trigger_ai: true

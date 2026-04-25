@@ -1,0 +1,21 @@
+name: "SOC-004 | T1021 — Lateral Movement via Remote Services"
+type: any
+index: soc-logs-*
+realert: { minutes: 10 }
+filter:
+  - bool:
+      should:
+        - bool:
+            must:
+              - term: { "EventID": "4648" }
+              - term: { "LogonType": "3" }
+        - bool:
+            must:
+              - term: { "EventID": "3" }
+              - terms: { "destination.port": [445, 135, 3389, 5985, 5986] }
+alert: ["post"]
+http_post_url: "http://stackstorm:9101/v1/webhooks/elastalert"
+http_post_payload:
+  rule_id: "SOC-004"
+  severity: "high"
+  mitre: "T1021"

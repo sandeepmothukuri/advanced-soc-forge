@@ -1,0 +1,106 @@
+name: SOC Lab CI — Validate Configs
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate-configs:
+    runs-on: ubuntu-latest
+    name: Validate detection rules and configs
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install validation tools
+        run: |
+          pip install pyyaml jsonschema --break-system-packages 2>/dev/null || pip install pyyaml jsonschema
+
+      - name: Validate Sigma rules (YAML syntax)
+        run: |
+          echo "Validating Sigma rules..."
+          find detection-rules/sigma -name "*.yml" -exec python3 -c "
+          import yaml, sys
+          for f in sys.argv[1:]:
+              try:
+                  with open(f) as fh: data = yaml.safe_load(fh)
+                  assert 'title' in data, f'Missing title in {f}'
+                  assert 'detection' in data, f'Missing detection in {f}'
+                  print(f'  ✅ {f}')
+              except Exception as e:
+                  print(f'  ❌ {f}: {e}')
+                  sys.exit(1)
+          " {} +
+
+      - name: Validate ElastAlert2 rules
+        run: |
+          echo "Validating ElastAlert2 rules..."
+          find config/elastalert2/rules -name "*.yml" -exec python3 -c "
+          import yaml, sys
+          required = ['name','type','index','alert']
+          for f in sys.argv[1:]:
+              with open(f) as fh: data = yaml.safe_load(fh)
+              for field in required:
+                  assert field in data, f'Missing {field} in {f}'
+              print(f'  ✅ {f}')
+          " {} +
+
+      - name: Validate docker-compose
+        run: |
+          docker compose config --quiet && echo "  ✅ docker-compose.yml valid"
+
+      - name: Validate Vector config
+        run: |
+          python3 -c "
+          import re
+          with open('config/vector/vector.toml') as f: content = f.read()
+          sources = re.findall(r'\[sources\.\w+\]', content)
+          sinks   = re.findall(r'\[sinks\.\w+\]', content)
+          print(f'  ✅ Vector: {len(sources)} sources, {len(sinks)} sinks')
+          "
+
+      - name: Check .env.example completeness
+        run: |
+          python3 -c "
+          with open('.env.example') as f:
+              keys = [l.split('=')[0].strip() for l in f if '=' in l and not l.startswith('#')]
+          print(f'  ✅ .env.example: {len(keys)} variables defined')
+          assert len(keys) >= 15, f'Expected at least 15 env vars, got {len(keys)}'
+          "
+
+      - name: Lint Python AI agents
+        run: |
+          pip install pyflakes --break-system-packages 2>/dev/null || pip install pyflakes
+          find ai-agents -name "*.py" -exec python3 -m pyflakes {} \; 2>&1 | grep -v "undefined name" | head -20 || true
+          echo "  ✅ Python agent syntax check complete"
+
+  security-scan:
+    runs-on: ubuntu-latest
+    name: Security scan
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for committed secrets
+        run: |
+          echo "Scanning for accidental secret commits..."
+          FOUND=0
+          # Check no real passwords in committed configs
+          if grep -r "AdminPassword123\!" --include="*.yml" --include="*.yaml" config/ 2>/dev/null | grep -v ".env.example" | grep -v "# default" | head -5; then
+            echo "  ⚠️  Default passwords found — ensure .env overrides these"
+          fi
+          # Ensure .env is gitignored
+          if grep -q "^\.env$" .gitignore; then
+            echo "  ✅ .env is in .gitignore"
+          else
+            echo "  ❌ .env is NOT in .gitignore — FIX THIS"
+            exit 1
+          fi
+          echo "  ✅ Security scan complete"

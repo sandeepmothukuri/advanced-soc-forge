@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MISP Threat Intel — SOC Lab</title>
+<link rel="stylesheet" href="soc-theme.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="layout">
+
+  <nav class="sidebar">
+    <div class="sidebar-logo">SOC Lab v2</div>
+    <ul class="sidebar-nav">
+      <li><a href="index.html">⌂ Portal</a></li>
+      <li><a href="01_soc_overview.html">Overview</a></li>
+      <li><a href="02_opensearch_siem.html">OpenSearch SIEM</a></li>
+      <li><a href="03_zeek_network.html">Zeek NSM</a></li>
+      <li><a href="04_suricata_ids.html">Suricata IDS</a></li>
+      <li><a href="05_ai_agents.html">AI Agents</a></li>
+      <li><a href="06_iris_cases.html">DFIR-IRIS</a></li>
+      <li><a href="07_caldera_attack.html">Caldera</a></li>
+      <li><a href="08_misp_ti.html" class="active">MISP Threat Intel</a></li>
+      <li><a href="09_velociraptor.html">Velociraptor</a></li>
+      <li><a href="10_responder_redteam.html">Red Team</a></li>
+    </ul>
+    <div class="sidebar-footer">MITRE ATT&amp;CK v14</div>
+  </nav>
+
+  <div class="main-wrap">
+    <header class="topbar">
+      <span class="topbar-title">MISP — Threat Intelligence Platform</span>
+      <div class="topbar-meta">
+        <span class="status-dot green"></span> 4 feeds active
+      </div>
+    </header>
+
+    <main class="content">
+
+      <div class="kpi-row">
+        <div class="kpi-card"><div class="kpi-label">Total IOCs</div><div class="kpi-value">12,847</div><div class="kpi-sub">Across all feeds</div></div>
+        <div class="kpi-card critical"><div class="kpi-label">Malicious Hits (24h)</div><div class="kpi-value">9</div><div class="kpi-sub">Matched to SIEM</div></div>
+        <div class="kpi-card high"><div class="kpi-label">Events</div><div class="kpi-value">234</div><div class="kpi-sub">14 this week</div></div>
+        <div class="kpi-card"><div class="kpi-label">Sharing Groups</div><div class="kpi-value">3</div><div class="kpi-sub">ISAC, Internal, R&D</div></div>
+      </div>
+
+      <div class="grid-2">
+
+        <!-- IOC Lookup -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">🔍 IOC Lookup</span></div>
+          <div class="card-body">
+            <div style="display:flex;gap:8px;margin-bottom:16px">
+              <input id="ioc-input" class="ioc-input" type="text" placeholder="IP, domain, hash, email..." value="185.220.101.45" style="flex:1;background:var(--bg-card-alt);border:1px solid var(--border);color:var(--text-primary);padding:8px 12px;border-radius:6px;font-family:var(--font-mono);font-size:13px">
+              <button class="btn btn-primary" onclick="lookupIOC()">Search</button>
+            </div>
+            <div id="ioc-result" style="display:none" class="log-block"></div>
+          </div>
+        </div>
+
+        <!-- IOC Type Doughnut -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">📊 IOC Types</span></div>
+          <div class="card-body">
+            <div class="chart-wrap" style="height:220px">
+              <canvas id="iocChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- APT-29 Attribution -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">🎭 APT-29 Attribution</span>
+            <span class="badge badge-critical">CONFIRMED</span>
+          </div>
+          <div class="card-body">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+              <div><div style="color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em">Actor</div><div style="color:var(--text-primary);font-weight:600">APT-29 / Cozy Bear</div></div>
+              <div><div style="color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em">Nation State</div><div style="color:var(--text-primary);font-weight:600">Russia (SVR)</div></div>
+              <div><div style="color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em">Motivation</div><div style="color:var(--text-primary)">Espionage</div></div>
+              <div><div style="color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em">Active Since</div><div style="color:var(--text-primary)">2008</div></div>
+            </div>
+            <div style="margin-bottom:8px;color:var(--text-secondary);font-size:13px">Confidence</div>
+            <div class="progress-bar"><div class="progress-fill" style="width:85%;background:var(--critical)"></div></div>
+            <div style="text-align:right;color:var(--text-muted);font-size:12px;margin-top:4px">85%</div>
+            <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap">
+              <span class="technique-tag">T1566.001</span>
+              <span class="technique-tag">T1059.001</span>
+              <span class="technique-tag">T1003.001</span>
+              <span class="technique-tag">T1071.004</span>
+              <span class="technique-tag">T1550.002</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feed Status -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">📡 Feed Status</span></div>
+          <div class="card-body">
+            <table class="data-table">
+              <thead><tr><th>Feed Name</th><th>IOCs</th><th>Updated</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td>CIRCL OSINT Feed</td><td class="mono">3,412</td><td class="mono">6h ago</td><td><span class="badge badge-low">ACTIVE</span></td></tr>
+                <tr><td>Abuse.ch URLhaus</td><td class="mono">4,891</td><td class="mono">2h ago</td><td><span class="badge badge-low">ACTIVE</span></td></tr>
+                <tr><td>MISP Galaxies — APT</td><td class="mono">1,240</td><td class="mono">1d ago</td><td><span class="badge badge-low">ACTIVE</span></td></tr>
+                <tr><td>Feodo Botnet Tracker</td><td class="mono">892</td><td class="mono">4h ago</td><td><span class="badge badge-low">ACTIVE</span></td></tr>
+                <tr><td>Custom Internal Feed</td><td class="mono">412</td><td class="mono">30m ago</td><td><span class="badge badge-low">ACTIVE</span></td></tr>
+                <tr><td>AlienVault OTX</td><td class="mono">2,000</td><td class="mono">12h ago</td><td><span class="badge badge-medium">STALE</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+const KNOWN_IOCS = {
+  '185.220.101.45': {verdict:'MALICIOUS', type:'IP', actor:'APT-29', confidence:'HIGH', tags:['Tor Exit Node','C2','Exfil'], seen:'2026-04-25 02:14 UTC'},
+  '45.132.227.89':  {verdict:'MALICIOUS', type:'IP', actor:'APT-29', confidence:'MED',  tags:['VPN Anomaly','Geo:Romania'], seen:'2026-04-25 03:45 UTC'},
+  'c2.malicious-apt.net': {verdict:'MALICIOUS', type:'Domain', actor:'APT-29', confidence:'HIGH', tags:['DNS Tunnel','C2'], seen:'2026-04-25 03:12 UTC'},
+};
+function lookupIOC() {
+  const val = document.getElementById('ioc-input').value.trim();
+  const box = document.getElementById('ioc-result');
+  box.style.display = 'block';
+  const hit = KNOWN_IOCS[val];
+  if (hit) {
+    box.style.border = '1px solid var(--critical)';
+    box.innerHTML = `<div style="color:var(--critical);font-weight:700;margin-bottom:8px">⚠ ${hit.verdict} — ${hit.type}</div>
+<div>Actor: <b>${hit.actor}</b> · Confidence: <b>${hit.confidence}</b></div>
+<div>First seen: ${hit.seen}</div>
+<div style="margin-top:8px">Tags: ${hit.tags.map(t=>`<span class="technique-tag">${t}</span>`).join(' ')}</div>`;
+  } else {
+    box.style.border = '1px solid var(--success)';
+    box.innerHTML = `<div style="color:var(--success);font-weight:700">✔ NOT FOUND — No matches in MISP feeds</div><div style="color:var(--text-muted);margin-top:4px">Query: ${val}</div>`;
+  }
+}
+
+// IOC type chart
+new Chart(document.getElementById('iocChart'), {
+  type:'doughnut',
+  data:{
+    labels:['IP Address','Domain','URL','File Hash','Email','User-Agent'],
+    datasets:[{
+      data:[4200,3100,2400,1800,900,447],
+      backgroundColor:['#3b82f6','#ef4444','#f97316','#eab308','#22c55e','#8b5cf6'],
+      borderWidth:0
+    }]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{position:'right',labels:{color:'#94a3b8',font:{size:11}}}}
+  }
+});
+</script>
+</body>
+</html>

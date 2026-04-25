@@ -1,0 +1,22 @@
+---
+name: on_powershell_alert
+pack: soc
+description: "Trigger PS response when ElastAlert fires T1059"
+enabled: true
+trigger:
+  type: core.st2.webhook
+  parameters:
+    url: elastalert
+criteria:
+  trigger.body.rule_name:
+    type: iequals
+    pattern: "T1059_powershell"
+action:
+  ref: soc.create_incident
+  parameters:
+    title: "Encoded PowerShell Execution — {{trigger.body.hostname}}"
+    description: "Suspicious PowerShell with encoded command on {{trigger.body.hostname}}"
+    severity: 4
+    hostname: "{{trigger.body.hostname}}"
+    mitre_technique: T1059.001
+    trigger_ai: true

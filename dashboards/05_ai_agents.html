@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Agents — SOC Lab</title>
+  <link rel="stylesheet" href="soc-theme.css">
+  <style>
+    .agent-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: var(--space-5);
+      display: flex; flex-direction: column; gap: var(--space-3);
+    }
+    .agent-card.active { border-color: var(--accent); box-shadow: 0 0 16px rgba(59,130,246,.12); }
+    .agent-card.busy   { border-color: var(--medium); }
+
+    .agent-header { display: flex; align-items: center; gap: var(--space-3); }
+    .agent-icon {
+      width: 36px; height: 36px; border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center; font-size: 18px;
+      background: var(--accent-dim); border: 1px solid rgba(59,130,246,.3);
+    }
+    .agent-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .agent-role { font-size: 10px; color: var(--text-secondary); font-family: var(--font-mono); }
+
+    .agent-tools { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+    .tool-tag {
+      font-size: 9px; padding: 2px 6px; border-radius: 3px;
+      background: var(--bg-input); color: var(--text-secondary);
+      border: 1px solid var(--border); font-family: var(--font-mono);
+    }
+
+    .mission-box {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-md); padding: var(--space-5);
+    }
+    .mission-select {
+      width: 100%; margin-bottom: var(--space-3);
+    }
+    .mission-output {
+      background: var(--bg-base); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: var(--space-4);
+      font-family: var(--font-mono); font-size: 11px; line-height: 1.7;
+      min-height: 160px; max-height: 280px; overflow-y: auto;
+      color: var(--text-secondary);
+    }
+    .thinking-dot {
+      display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent); animation: blink 1s infinite;
+      margin: 0 2px;
+    }
+    @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.2;} }
+
+    .job-row {
+      display: flex; align-items: center; gap: var(--space-3);
+      padding: var(--space-2) 0; border-bottom: 1px solid rgba(31,45,74,.5); font-size: 12px;
+    }
+    .job-row:last-child { border-bottom: none; }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <nav class="sidebar">
+    <div class="sidebar-brand">
+      <a href="index.html" class="brand-icon" style="text-decoration:none;font-size:15px;">🛡️</a>
+      <div class="brand-text"><span class="brand-title">SOC Lab v2</span><span class="brand-sub">COMMAND CENTER</span></div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Dashboards</div>
+      <ul class="sidebar-nav">
+        <li class="nav-item"><a href="01_soc_overview.html"><span class="nav-icon">📊</span><span>SOC Overview</span></a></li>
+        <li class="nav-item"><a href="02_opensearch_siem.html"><span class="nav-icon">🔍</span><span>OpenSearch SIEM</span></a></li>
+        <li class="nav-item"><a href="03_zeek_network.html"><span class="nav-icon">🌐</span><span>Zeek Network</span></a></li>
+        <li class="nav-item"><a href="04_suricata_ids.html"><span class="nav-icon">🚨</span><span>Suricata IDS</span></a></li>
+        <li class="nav-item"><a href="05_ai_agents.html" class="active"><span class="nav-icon">🤖</span><span>AI Agents</span></a></li>
+        <li class="nav-item"><a href="06_iris_cases.html"><span class="nav-icon">📋</span><span>DFIR-IRIS</span></a></li>
+        <li class="nav-item"><a href="07_caldera_attack.html"><span class="nav-icon">⚔️</span><span>Caldera</span></a></li>
+        <li class="nav-item"><a href="08_misp_ti.html"><span class="nav-icon">🌍</span><span>MISP Intel</span></a></li>
+        <li class="nav-item"><a href="09_velociraptor.html"><span class="nav-icon">🦖</span><span>Velociraptor</span></a></li>
+        <li class="nav-item"><a href="10_responder_redteam.html"><span class="nav-icon">🎭</span><span>Responder</span></a></li>
+      </ul>
+    </div>
+    <div class="sidebar-footer">SOC Lab v2.0 · OSS</div>
+  </nav>
+
+  <header class="topbar">
+    <div class="topbar-title"><span class="page-icon">🤖</span> AI Agents (CrewAI + Ollama)</div>
+    <span class="topbar-meta">CrewAI · llama3.2:3b · FastAPI :8000</span>
+    <div class="topbar-right">
+      <a href="http://localhost:8000/docs" target="_blank" class="btn btn-ghost btn-sm">API Docs ↗</a>
+      <a href="index.html" class="btn btn-ghost btn-sm">← Portal</a>
+    </div>
+  </header>
+
+  <main class="main-content">
+
+    <div class="grid-4 mb-4">
+      <div class="kpi-card low">
+        <div class="kpi-label">Agents Online</div>
+        <div class="kpi-value">4</div>
+        <div class="kpi-sub">all healthy</div>
+      </div>
+      <div class="kpi-card info">
+        <div class="kpi-label">Jobs Today</div>
+        <div class="kpi-value">7</div>
+        <div class="kpi-sub">completed</div>
+      </div>
+      <div class="kpi-card medium">
+        <div class="kpi-label">Ollama Model</div>
+        <div class="kpi-value" style="font-size:16px;margin-top:4px">llama3.2</div>
+        <div class="kpi-sub">3B · local inference</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Avg Response</div>
+        <div class="kpi-value">42s</div>
+        <div class="kpi-sub">per analysis</div>
+      </div>
+    </div>
+
+    <!-- Agent cards -->
+    <div class="grid-4 mb-4">
+      <div class="agent-card active">
+        <div class="agent-header">
+          <div class="agent-icon">🔬</div>
+          <div><div class="agent-name">Threat Analyst</div><div class="agent-role">SOC L3 · max_iter=8</div></div>
+        </div>
+        <div class="agent-tools">
+          <span class="tool-tag">OpenSearch</span>
+          <span class="tool-tag">MISP</span>
+        </div>
+        <div style="margin-top:auto">
+          <div class="progress-bar"><div class="progress-fill low" style="width:85%"></div></div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:4px">Confidence: 85%</div>
+        </div>
+      </div>
+
+      <div class="agent-card active">
+        <div class="agent-header">
+          <div class="agent-icon">🚑</div>
+          <div><div class="agent-name">Incident Responder</div><div class="agent-role">DFIR Lead · max_iter=10</div></div>
+        </div>
+        <div class="agent-tools">
+          <span class="tool-tag">OpenSearch</span>
+          <span class="tool-tag">IRIS</span>
+          <span class="tool-tag">Velociraptor</span>
+          <span class="tool-tag">MISP</span>
+        </div>
+        <div style="margin-top:auto">
+          <div class="progress-bar"><div class="progress-fill low" style="width:92%"></div></div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:4px">Confidence: 92%</div>
+        </div>
+      </div>
+
+      <div class="agent-card active">
+        <div class="agent-header">
+          <div class="agent-icon">🎯</div>
+          <div><div class="agent-name">Threat Hunter</div><div class="agent-role">Purple Team · max_iter=12</div></div>
+        </div>
+        <div class="agent-tools">
+          <span class="tool-tag">OpenSearch</span>
+          <span class="tool-tag">Velociraptor</span>
+          <span class="tool-tag">MISP</span>
+        </div>
+        <div style="margin-top:auto">
+          <div class="progress-bar"><div class="progress-fill medium" style="width:71%"></div></div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:4px">Confidence: 71%</div>
+        </div>
+      </div>
+
+      <div class="agent-card active">
+        <div class="agent-header">
+          <div class="agent-icon">⚙️</div>
+          <div><div class="agent-name">Detection Engineer</div><div class="agent-role">Sigma/YARA · max_iter=8</div></div>
+        </div>
+        <div class="agent-tools">
+          <span class="tool-tag">SigmaGen</span>
+          <span class="tool-tag">CoverageGap</span>
+        </div>
+        <div style="margin-top:auto">
+          <div class="progress-bar"><div class="progress-fill low" style="width:78%"></div></div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:4px">Confidence: 78%</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2 mb-4">
+      <!-- Mission launcher -->
+      <div class="mission-box">
+        <div class="section-header mb-4">
+          <div class="section-title">Mission Launcher</div>
+        </div>
+        <select class="input mission-select" id="mission-select">
+          <option value="investigate">investigate_alert — Full SOC investigation</option>
+          <option value="hunt">threat_hunt — Hypothesis-driven hunt</option>
+          <option value="triage">triage_incident — Rapid triage</option>
+          <option value="gaps">detection_gaps — Coverage gap analysis</option>
+          <option value="report">weekly_report — SOC summary report</option>
+        </select>
+        <button class="btn btn-primary w-full" id="run-btn" onclick="runMission()">▶ Run Mission</button>
+        <div class="mission-output mt-4" id="mission-output">
+          <span style="color:var(--text-muted)">Select a mission and click Run…</span>
+        </div>
+      </div>
+
+      <!-- Job list -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">📋 Recent Jobs</span>
+          <span class="badge badge-accent">7 today</span>
+        </div>
+        <div class="card-body" style="padding-top:var(--space-3)">
+          <div class="job-row">
+            <span class="badge badge-low">DONE</span>
+            <span style="flex:1;font-size:11px">investigate_alert · INC-001 · APT-29 Attribution</span>
+            <span class="text-muted text-xs mono">12:47</span>
+          </div>
+          <div class="job-row">
+            <span class="badge badge-low">DONE</span>
+            <span style="flex:1;font-size:11px">threat_hunt · lateral_movement hypothesis</span>
+            <span class="text-muted text-xs mono">12:31</span>
+          </div>
+          <div class="job-row">
+            <span class="badge badge-low">DONE</span>
+            <span style="flex:1;font-size:11px">detection_gaps · 10 techniques uncovered</span>
+            <span class="text-muted text-xs mono">11:55</span>
+          </div>
+          <div class="job-row">
+            <span class="badge badge-medium">BUSY</span>
+            <span style="flex:1;font-size:11px">triage_incident · LLMNR poisoning event</span>
+            <span class="text-muted text-xs mono">12:49</span>
+          </div>
+          <div class="job-row">
+            <span class="badge badge-low">DONE</span>
+            <span style="flex:1;font-size:11px">investigate_alert · INC-002 · Brute force</span>
+            <span class="text-muted text-xs mono">10:12</span>
+          </div>
+          <div class="job-row">
+            <span class="badge badge-low">DONE</span>
+            <span style="flex:1;font-size:11px">weekly_report · SOC summary generated</span>
+            <span class="text-muted text-xs mono">09:00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+const MISSION_OUTPUTS = {
+  investigate: `[Threat Analyst] Querying OpenSearch for alert INC-001...
+  → Found 47 related events across 3 hosts
+  → MITRE mapping: T1557.001, T1110, T1021.002
+
+[Incident Responder] Creating IRIS case INC-2026-001...
+  → Case created: id=42, title="APT-29 Suspected Intrusion"
+  → Triggering Velociraptor hunt on WORKSTATION-07
+
+[Threat Hunter] Cross-referencing MISP for IOCs...
+  → 192.168.1.105: MATCHED — APT-29 known C2 infrastructure
+  → Confidence: HIGH
+
+[CONCLUSION] Attributed to APT-29 (Cozy Bear) with 85% confidence.
+  → Recommended: Isolate WORKSTATION-07, rotate credentials,
+    block 192.168.1.105 at perimeter.`,
+
+  hunt: `[Threat Hunter] Loading hypothesis: lateral_movement_via_smb
+  → Querying for EventID 4648, 4624 type=3 cross-host...
+  → Found 14 successful lateral auth events
+  → Source: WORKSTATION-07 | Destinations: 4 unique hosts
+
+[Threat Analyst] Enriching with MISP context...
+  → No direct IOC matches, but TTP pattern matches APT-29
+
+[HUNT RESULT] Hypothesis CONFIRMED.
+  → 4 hosts accessed laterally over 35 minutes
+  → Recommend: Network segmentation review, PtH mitigation`,
+
+  triage: `[Incident Responder] Rapid triage of LLMNR poisoning...
+  → Event type: T1557.001 (LLMNR/NBT-NS Poisoning)
+  → Attacker: 192.168.1.105 | Victims: 5 hosts
+  → Captured hashes: NTLMv2 (crackable offline)
+
+  Severity: CRITICAL
+  Containment: Block attacker IP immediately
+  Next step: Disable LLMNR via GPO (Computer Config → DNS Client)`,
+
+  gaps: `[Detection Engineer] Analysing MITRE ATT&CK coverage...
+  → Covered (14): T1059.001, T1110, T1003.001, T1053.005...
+  → GAP (10): T1055, T1078, T1134, T1490, T1027...
+
+  Generating Sigma rules for top gaps:
+  → T1055 (Process Injection) — rule written ✓
+  → T1078 (Valid Accounts) — rule written ✓
+  → T1134 (Access Token) — rule written ✓`,
+
+  report: `[Weekly SOC Report — Week 17, 2026]
+  ─────────────────────────────────────
+  Total Events: 8,241 | Alerts: 127 | Cases: 4
+  Critical: 3 | High: 8 | Medium: 21
+
+  Top Techniques: T1557.001 (31), T1059.001 (9), T1110 (8)
+  Detections by Source: Zeek (38%), Sysmon (29%), Suricata (18%)
+
+  Incidents: INC-001 (APT-29, closed), INC-002 (BruteForce, open)
+  Recommended Actions: Disable LLMNR, Patch MS17-010, MFA rollout`
+};
+
+function runMission() {
+  const mission = document.getElementById('mission-select').value;
+  const out = document.getElementById('mission-output');
+  const btn = document.getElementById('run-btn');
+  btn.disabled = true;
+  btn.textContent = 'Running…';
+  out.innerHTML = '<span style="color:var(--accent)">Initialising CrewAI crew</span> <span class="thinking-dot"></span><span class="thinking-dot" style="animation-delay:.3s"></span><span class="thinking-dot" style="animation-delay:.6s"></span>';
+  setTimeout(() => {
+    const lines = MISSION_OUTPUTS[mission].split('\n');
+    out.innerHTML = '';
+    lines.forEach((l, i) => {
+      setTimeout(() => {
+        out.innerHTML += `<span style="color:${l.startsWith('[')? 'var(--accent)' : 'var(--text-secondary)'}">${l}\n</span>`;
+        out.scrollTop = out.scrollHeight;
+      }, i * 80);
+    });
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.textContent = '▶ Run Mission';
+    }, lines.length * 80 + 500);
+  }, 1200);
+}
+</script>
+</body>
+</html>

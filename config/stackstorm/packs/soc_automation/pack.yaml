@@ -1,0 +1,6 @@
+ref: soc_automation
+name: SOC Automation Pack
+description: Advanced SOAR automation for SOC Level 2/3 — all MITRE ATT&CK response playbooks
+version: 2.0.0
+author: SOC Lab Team
+email: soc@lab.local

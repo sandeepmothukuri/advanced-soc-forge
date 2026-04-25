@@ -1,0 +1,18 @@
+rules_folder: /opt/elastalert/rules
+run_every:
+  seconds: 30
+buffer_time:
+  minutes: 15
+es_host: opensearch-node1
+es_port: 9200
+es_username: admin
+es_password: "${OPENSEARCH_INITIAL_ADMIN_PASSWORD}"
+writeback_index: elastalert2_status
+alert_time_limit:
+  days: 2
+use_ssl: false
+verify_certs: false
+notify_email:
+  - "${ELASTALERT_EMAIL_TO}"
+smtp_host: "${ELASTALERT_EMAIL_SMTP}"
+from_addr: "${ELASTALERT_EMAIL_FROM}"

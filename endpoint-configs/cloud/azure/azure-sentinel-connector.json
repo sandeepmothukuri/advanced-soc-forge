@@ -1,0 +1,65 @@
+{
+  "comment": "Azure → SOC Lab: Forward Azure Monitor / Sentinel alerts to OpenSearch",
+  "method": "Logic App HTTP Action",
+
+  "logicApp": {
+    "trigger": {
+      "type": "Microsoft.SecurityInsights/alertRules",
+      "description": "Fires on every Azure Sentinel alert"
+    },
+    "actions": [
+      {
+        "name": "ForwardToSOC",
+        "type": "Http",
+        "method": "POST",
+        "uri": "http://YOUR_SOC_IP:9200/soc-logs-azure/_doc",
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Basic YWRtaW46QWRtaW5QYXNzd29yZDEyMyE="
+        },
+        "body": {
+          "@timestamp": "@{triggerBody()?['properties']?['createdTimeUtc']}",
+          "log_source": "azure_sentinel",
+          "sensor_type": "cloud",
+          "cloud_provider": "azure",
+          "title": "@{triggerBody()?['properties']?['alertDisplayName']}",
+          "severity": "@{triggerBody()?['properties']?['severity']}",
+          "src_ip": "@{triggerBody()?['properties']?['compromisedEntity']}",
+          "message": "@{triggerBody()?['properties']?['description']}",
+          "mitre_technique": "@{triggerBody()?['properties']?['techniques']?[0]}",
+          "status": "@{triggerBody()?['properties']?['status']}"
+        }
+      }
+    ]
+  },
+
+  "azureActivityLogs": {
+    "description": "Stream Azure Activity Logs via Diagnostic Settings → Event Hub → Vector",
+    "steps": [
+      "1. Azure Portal → Monitor → Diagnostic Settings → Add diagnostic setting",
+      "2. Select: Administrative, Security, Alert, Policy categories",
+      "3. Destination: Stream to Event Hub",
+      "4. Create Event Hub: soc-lab-logs",
+      "5. Vector source in vector.toml (see below)"
+    ],
+    "vectorConfig": {
+      "source": {
+        "type": "azure_event_hub",
+        "connection_string": "${AZURE_EVENT_HUB_CONNECTION_STRING}",
+        "consumer_group": "$Default",
+        "namespace": "soc-lab-eh"
+      },
+      "transforms": {
+        "mitre_tagging": "See vector.toml azure_logs section"
+      }
+    }
+  },
+
+  "detectedTechniques": {
+    "T1078": "Valid Accounts — unusual sign-in location or time",
+    "T1110": "Brute Force — failed Azure AD logins",
+    "T1136.003": "Create Cloud Account — new AAD user creation",
+    "T1562.008": "Disable Cloud Logs — Diagnostic Settings deleted",
+    "T1580": "Cloud Infrastructure Discovery — resource enumeration"
+  }
+}

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Red Team / Responder — SOC Lab</title>
+<link rel="stylesheet" href="soc-theme.css">
+</head>
+<body>
+<div class="layout">
+
+  <nav class="sidebar">
+    <div class="sidebar-logo">SOC Lab v2</div>
+    <ul class="sidebar-nav">
+      <li><a href="index.html">⌂ Portal</a></li>
+      <li><a href="01_soc_overview.html">Overview</a></li>
+      <li><a href="02_opensearch_siem.html">OpenSearch SIEM</a></li>
+      <li><a href="03_zeek_network.html">Zeek NSM</a></li>
+      <li><a href="04_suricata_ids.html">Suricata IDS</a></li>
+      <li><a href="05_ai_agents.html">AI Agents</a></li>
+      <li><a href="06_iris_cases.html">DFIR-IRIS</a></li>
+      <li><a href="07_caldera_attack.html">Caldera</a></li>
+      <li><a href="08_misp_ti.html">MISP Threat Intel</a></li>
+      <li><a href="09_velociraptor.html">Velociraptor</a></li>
+      <li><a href="10_responder_redteam.html" class="active">Red Team</a></li>
+    </ul>
+    <div class="sidebar-footer">MITRE ATT&amp;CK v14</div>
+  </nav>
+
+  <div class="main-wrap">
+    <header class="topbar">
+      <span class="topbar-title">Red Team — Responder + LLMNR Poisoning</span>
+      <div class="topbar-meta">
+        <span class="status-dot red"></span> Active — Lab use only
+      </div>
+    </header>
+
+    <main class="content">
+
+      <!-- Warning Banner -->
+      <div style="background:rgba(239,68,68,0.12);border:1px solid var(--critical);border-radius:8px;padding:16px 20px;margin-bottom:var(--space-5);display:flex;gap:12px;align-items:flex-start">
+        <span style="font-size:20px;flex-shrink:0">⚠️</span>
+        <div>
+          <div style="color:var(--critical);font-weight:700;margin-bottom:4px">Red Team Profile Active — Isolated Lab Network Only</div>
+          <div style="color:var(--text-secondary);font-size:13px">Responder is running in capture-only mode. LLMNR/NBT-NS poisoning is active on the lab VLAN. Never run against production or networks without explicit written authorization. Start with: <code style="color:var(--accent)">docker compose --profile redteam up -d</code></div>
+        </div>
+      </div>
+
+      <div class="kpi-row">
+        <div class="kpi-card critical"><div class="kpi-label">Hashes Captured</div><div class="kpi-value" id="hash-total">0</div><div class="kpi-sub">NTLMv2</div></div>
+        <div class="kpi-card high"><div class="kpi-label">Unique Accounts</div><div class="kpi-value" id="unique-accts">0</div><div class="kpi-sub">Affected users</div></div>
+        <div class="kpi-card"><div class="kpi-label">Runtime</div><div class="kpi-value" id="runtime">00:00</div><div class="kpi-sub">hh:mm</div></div>
+        <div class="kpi-card"><div class="kpi-label">Poisoned Queries</div><div class="kpi-value" id="q-count">0</div><div class="kpi-sub">LLMNR / NBNS</div></div>
+      </div>
+
+      <div class="grid-2">
+
+        <!-- NTLMv2 Hash Feed -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">🔑 NTLMv2 Hash Capture Feed</span>
+            <span class="badge badge-critical" id="hash-badge">0 captured</span>
+          </div>
+          <div id="hash-feed" style="max-height:380px;overflow-y:auto;padding:12px;font-family:var(--font-mono);font-size:11px;background:var(--bg-card-alt);border-radius:4px"></div>
+        </div>
+
+        <!-- Blue Team Response Timeline -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">🛡️ Blue Team Response</span></div>
+          <div class="card-body">
+            <div class="timeline">
+              <div class="tl-item">
+                <div class="tl-dot critical"></div>
+                <div class="tl-content">
+                  <div class="tl-time">T+00:00</div>
+                  <div class="tl-title">LLMNR Broadcast Detected</div>
+                  <div class="tl-desc">Zeek LLMNR log captures broadcast from WKSTN-FINANCE-01 · Suricata SID 2024897 fires</div>
+                </div>
+              </div>
+              <div class="tl-item">
+                <div class="tl-dot high"></div>
+                <div class="tl-content">
+                  <div class="tl-time">T+00:45</div>
+                  <div class="tl-title">ElastAlert2 Rule Fires</div>
+                  <div class="tl-desc">T1557_llmnr_poisoning rule generates CRITICAL alert in OpenSearch · Auto-creates IRIS case</div>
+                </div>
+              </div>
+              <div class="tl-item">
+                <div class="tl-dot high"></div>
+                <div class="tl-content">
+                  <div class="tl-time">T+01:20</div>
+                  <div class="tl-title">StackStorm Playbook Triggered</div>
+                  <div class="tl-desc">soc_pack.llmnr_response isolates WKSTN-FINANCE-01 VLAN · Notifies analyst via webhook</div>
+                </div>
+              </div>
+              <div class="tl-item">
+                <div class="tl-dot medium"></div>
+                <div class="tl-content">
+                  <div class="tl-time">T+03:00</div>
+                  <div class="tl-title">Hash Forwarded to Cracking</div>
+                  <div class="tl-desc">NTLMv2 hash extracted and submitted to Hashcat job queue for offline cracking assessment</div>
+                </div>
+              </div>
+              <div class="tl-item">
+                <div class="tl-dot medium"></div>
+                <div class="tl-content">
+                  <div class="tl-time">T+05:30</div>
+                  <div class="tl-title">IOC Exported to MISP</div>
+                  <div class="tl-desc">Attacker IP and poisoned hostname added to MISP event APT-TI-2026-04 · Shared with ISAC</div>
+                </div>
+              </div>
+              <div class="tl-item">
+                <div class="tl-dot low"></div>
+                <div class="tl-content">
+                  <div class="tl-time">T+08:00</div>
+                  <div class="tl-title">GPO Remediation Applied</div>
+                  <div class="tl-desc">LLMNR + NBT-NS disabled via GPO across domain · Password reset forced for affected accounts</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- GPO Remediation Guide -->
+        <div class="card" style="grid-column:1/-1">
+          <div class="card-header"><span class="card-title">🔧 GPO Remediation Guide — Disable LLMNR &amp; NBT-NS</span></div>
+          <div class="card-body">
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:var(--space-4)">
+
+              <div>
+                <div style="color:var(--accent);font-weight:600;margin-bottom:8px">Step 1 — Disable LLMNR via GPO</div>
+                <div class="log-block">Computer Configuration →
+  Administrative Templates →
+    Network → DNS Client →
+      Turn off multicast name resolution
+        → Enabled</div>
+              </div>
+
+              <div>
+                <div style="color:var(--accent);font-weight:600;margin-bottom:8px">Step 2 — Disable NetBIOS over TCP</div>
+                <div class="log-block">DHCP Server → Scope Options →
+  015 DNS Domain Name → set domain
+
+Or per-NIC via registry:
+HKLM\SYSTEM\CCS\Services\NetBT\
+  Parameters\Interfaces\{GUID}
+  NetbiosOptions = 2  (Disable)</div>
+              </div>
+
+              <div>
+                <div style="color:var(--accent);font-weight:600;margin-bottom:8px">Step 3 — Enable SMB Signing</div>
+                <div class="log-block">Computer Configuration →
+  Windows Settings → Security Settings →
+    Local Policies → Security Options →
+      Microsoft network server:
+        Digitally sign communications
+          → Always</div>
+              </div>
+
+              <div>
+                <div style="color:var(--accent);font-weight:600;margin-bottom:8px">Step 4 — Block WPAD</div>
+                <div class="log-block">Create DNS entry:
+  WPAD → 0.0.0.0
+
+Group Policy:
+  Turn off automatic detection of
+  proxy settings → Enabled</div>
+              </div>
+
+              <div>
+                <div style="color:var(--accent);font-weight:600;margin-bottom:8px">Step 5 — Force Password Reset</div>
+                <div class="log-block">For each compromised account:
+  Set-ADUser -Identity &lt;user&gt; `
+    -ChangePasswordAtLogon $true
+
+Reset krbtgt password (if PtH
+confirmed on DC):
+  Set-ADAccountPassword krbtgt</div>
+              </div>
+
+              <div>
+                <div style="color:var(--accent);font-weight:600;margin-bottom:8px">Step 6 — Verify with PowerShell</div>
+                <div class="log-block">Get-DnsClientGlobalSetting |
+  Select UseMulticastResolution
+# Expected: False
+
+Get-NetAdapter | ForEach-Object {
+  (Get-WmiObject -Class Win32_
+  NetworkAdapterConfiguration
+  -Filter "Index=$($_.ifIndex)").
+  TcpipNetbiosOptions
+# Expected: 2 (Disabled)}</div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+const HASHES = [
+  {user:'CORP\\jsmith',   host:'WKSTN-FINANCE-01', hash:'aad3b435b51404ee:8846f7eaee8fb117ad06bdd830b7586c'},
+  {user:'CORP\\alee',     host:'WKSTN-LEGAL-05',   hash:'aad3b435b51404ee:f81a141d09c9e2b8ce67cc5e4c86de85'},
+  {user:'CORP\\bwilliams',host:'SRV-HR-02',         hash:'aad3b435b51404ee:7ce21f17c0aee7fb9ceba532d0546ad6'},
+  {user:'CORP\\mjohnson', host:'WKSTN-DEV-03',      hash:'aad3b435b51404ee:1a89a00c65374f0e5b5b76f9b4f4f123'},
+  {user:'CORP\\cjones',   host:'WKSTN-FINANCE-02',  hash:'aad3b435b51404ee:3f56e4b0c0a88e3d3a3f89e7cd2a7890'},
+];
+
+let captureCount = 0;
+let queryCount = 0;
+let startTime = Date.now();
+const accounts = new Set();
+
+function addHash() {
+  const h = HASHES[captureCount % HASHES.length];
+  const now = new Date().toISOString().replace('T',' ').substring(0,19);
+  const feed = document.getElementById('hash-feed');
+  const entry = document.createElement('div');
+  entry.style.cssText = 'border-bottom:1px solid rgba(255,255,255,0.05);padding:8px 0;';
+  entry.innerHTML = `<span style="color:#ef4444">[${now}]</span> <span style="color:#eab308">${h.user}</span> @ <span style="color:#94a3b8">${h.host}</span><br><span style="color:#64748b;font-size:10px;word-break:break-all">${h.hash}</span>`;
+  feed.prepend(entry);
+  captureCount++;
+  accounts.add(h.user);
+  queryCount += Math.floor(Math.random() * 3) + 1;
+  document.getElementById('hash-total').textContent = captureCount;
+  document.getElementById('unique-accts').textContent = accounts.size;
+  document.getElementById('q-count').textContent = queryCount;
+  document.getElementById('hash-badge').textContent = captureCount + ' captured';
+  if (feed.children.length > 30) feed.lastChild.remove();
+}
+
+function updateRuntime() {
+  const elapsed = Math.floor((Date.now() - startTime) / 1000);
+  const h = String(Math.floor(elapsed / 3600)).padStart(2,'0');
+  const m = String(Math.floor((elapsed % 3600) / 60)).padStart(2,'0');
+  document.getElementById('runtime').textContent = `${h}:${m}`;
+}
+
+// Seed initial entries
+for (let i = 0; i < 3; i++) addHash();
+setInterval(addHash, 15000);
+setInterval(updateRuntime, 1000);
+</script>
+</body>
+</html>

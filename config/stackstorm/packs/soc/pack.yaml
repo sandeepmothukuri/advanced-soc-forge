@@ -1,0 +1,16 @@
+---
+name: soc
+version: 2.0.0
+description: >
+  SOC automation pack — block IPs, enrich IOCs from MISP,
+  create DFIR-IRIS cases, trigger Velociraptor hunts,
+  quarantine endpoints, and notify the team.
+author: SOC-Lab
+email: soc@lab.internal
+keywords:
+  - security
+  - soc
+  - soar
+  - dfir
+  - threat-intel
+dependencies: []

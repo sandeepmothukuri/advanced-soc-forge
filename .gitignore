@@ -1,0 +1,55 @@
+# Environment — NEVER commit secrets
+.env
+*.env.local
+
+# Docker volumes data
+data/
+volumes/
+opensearch-data*/
+responder-logs/
+
+# Velociraptor keys (auto-generated)
+config/velociraptor/*.key
+config/velociraptor/server.config.yaml
+config/velociraptor/client.config.yaml
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+
+# AI agent memory/cache
+ai-agents/.crewai/
+ai-agents/db/
+ai-agents/*.db
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Caldera data
+config/caldera/data/
+config/caldera/plugins/*/data/
+
+# MISP keys
+config/misp/*.pem
+config/misp/gpg/
+
+# Captured hashes (red team — sensitive)
+config/responder/logs/
+responder-logs/NTLMv2*
+responder-logs/NTLMv1*

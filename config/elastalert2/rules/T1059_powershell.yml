@@ -1,0 +1,30 @@
+name: "SOC-001 | T1059.001 — Suspicious Encoded PowerShell"
+type: any
+index: soc-logs-*
+realert: { minutes: 5 }
+filter:
+  - bool:
+      must:
+        - term: { "EventID": "1" }
+        - bool:
+            should:
+              - wildcard: { "CommandLine": "*-EncodedCommand*" }
+              - wildcard: { "CommandLine": "*-enc *" }
+              - wildcard: { "CommandLine": "*IEX*" }
+              - wildcard: { "CommandLine": "*Invoke-Expression*" }
+              - wildcard: { "CommandLine": "*DownloadString*" }
+              - wildcard: { "CommandLine": "*bypass*hidden*" }
+alert_text: |
+  🔴 CRITICAL | T1059.001 — Encoded PowerShell
+  Host: {hostname} | User: {User}
+  Cmd:  {CommandLine}
+  Time: {timestamp}
+alert: ["post"]
+http_post_url: "http://stackstorm:9101/v1/webhooks/elastalert"
+http_post_payload:
+  rule_id: "SOC-001"
+  severity: "critical"
+  mitre: "T1059.001"
+  host: "%(hostname)s"
+  user: "%(User)s"
+  command: "%(CommandLine)s"

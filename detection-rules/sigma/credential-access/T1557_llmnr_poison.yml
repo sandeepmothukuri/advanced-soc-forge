@@ -1,0 +1,18 @@
+title: LLMNR/NBT-NS Poisoning — Responder Activity
+id: g8j2h6i9-0f7e-8g4j-h2i7-8k4j7f2i9g5j
+status: production
+description: Detects LLMNR/NBT-NS poisoning attacks — Responder tool usage
+author: SOC Lab
+tags: [attack.credential_access, attack.t1557.001]
+logsource:
+  category: network_connection
+  product: zeek
+detection:
+  selection_llmnr:
+    resp_p: 5355
+    proto: udp
+  selection_nbns:
+    resp_p: 137
+    proto: udp
+  condition: selection_llmnr or selection_nbns
+level: medium

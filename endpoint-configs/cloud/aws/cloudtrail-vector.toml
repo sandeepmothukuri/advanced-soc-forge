@@ -1,0 +1,66 @@
+# Vector source: AWS CloudTrail → OpenSearch
+# Ingests CloudTrail JSON events from S3 via SQS notification
+
+[sources.aws_cloudtrail]
+type           = "aws_s3"
+region         = "${AWS_REGION:-us-east-1}"
+sqs_queue_url  = "${AWS_SQS_CLOUDTRAIL_URL}"
+compression    = "auto"
+
+[transforms.cloudtrail_enrich]
+type   = "remap"
+inputs = ["aws_cloudtrail"]
+source = '''
+.log_source      = "aws_cloudtrail"
+.sensor_type     = "cloud"
+.cloud_provider  = "aws"
+.environment     = "lab"
+
+# Flatten CloudTrail structure
+.event_name      = .Records[0].eventName
+.source_ip       = .Records[0].sourceIPAddress
+.user_agent      = .Records[0].userAgent
+.aws_region      = .Records[0].awsRegion
+.principal       = .Records[0].userIdentity.arn
+.service         = .Records[0].eventSource
+
+# MITRE ATT&CK tagging
+if match(.event_name, r'GetSecretValue|GetParameter') {
+  .mitre_technique = "T1552.001"
+  .mitre_tactic    = "credential-access"
+  .severity        = "high"
+}
+if match(.event_name, r'CreateUser|AddUserToGroup|AttachUserPolicy') {
+  .mitre_technique = "T1136.003"
+  .mitre_tactic    = "persistence"
+  .severity        = "high"
+}
+if match(.event_name, r'StopLogging|DeleteTrail|UpdateTrail') {
+  .mitre_technique = "T1562.008"
+  .mitre_tactic    = "defense-evasion"
+  .severity        = "critical"
+}
+if match(.event_name, r'DescribeInstances|ListBuckets|ListRoles') {
+  .mitre_technique = "T1580"
+  .mitre_tactic    = "discovery"
+  .severity        = "medium"
+}
+if match(.event_name, r'AssumeRoleWithWebIdentity|GetFederationToken') {
+  .mitre_technique = "T1550.001"
+  .mitre_tactic    = "lateral-movement"
+  .severity        = "high"
+}
+
+.@timestamp = now()
+'''
+
+[sinks.cloudtrail_opensearch]
+type            = "elasticsearch"
+inputs          = ["cloudtrail_enrich"]
+endpoints       = ["http://${OPENSEARCH_HOST:-opensearch-node1}:9200"]
+auth.strategy   = "basic"
+auth.user       = "${OPENSEARCH_USER:-admin}"
+auth.password   = "${OPENSEARCH_PASSWORD:-AdminPassword123!}"
+index           = "soc-logs-aws-%Y.%m.%d"
+mode            = "bulk"
+bulk.index      = "soc-logs-aws-%Y.%m.%d"

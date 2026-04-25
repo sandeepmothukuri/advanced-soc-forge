@@ -1,0 +1,19 @@
+title: Pass-the-Hash Attack
+id: i0l4j8k1-2h9g-0i6l-j4k9-0m6l9h4k1i7l
+status: production
+description: Detects pass-the-hash attacks using harvested NTLM hashes
+author: SOC Lab
+tags: [attack.lateral_movement, attack.t1550.002]
+logsource:
+  product: windows
+  service: security
+detection:
+  selection:
+    EventID: 4624
+    LogonType: 3
+    AuthenticationPackageName: NTLM
+    KeyLength: 0
+  filter:
+    SubjectUserName|endswith: '$'
+  condition: selection and not filter
+level: high

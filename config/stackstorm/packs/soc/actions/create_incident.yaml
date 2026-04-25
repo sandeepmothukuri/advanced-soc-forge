@@ -1,0 +1,39 @@
+---
+name: create_incident
+pack: soc
+runner_type: python-script
+description: >
+  Create a formal incident case in DFIR-IRIS with initial context,
+  severity, and affected assets. Returns the case ID for follow-up actions.
+enabled: true
+entry_point: create_incident.py
+parameters:
+  title:
+    type: string
+    description: "Incident title"
+    required: true
+  description:
+    type: string
+    description: "Incident description with initial findings"
+    required: true
+  severity:
+    type: integer
+    description: "Severity: 1=Info 2=Low 3=Medium 4=High 5=Critical"
+    default: 3
+    enum: [1, 2, 3, 4, 5]
+  source_ip:
+    type: string
+    description: "Source IP address"
+    default: ""
+  hostname:
+    type: string
+    description: "Affected hostname"
+    default: ""
+  mitre_technique:
+    type: string
+    description: "MITRE ATT&CK technique ID"
+    default: ""
+  trigger_ai:
+    type: boolean
+    description: "Trigger AI agent crew for automated analysis"
+    default: true

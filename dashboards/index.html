@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SOC Lab v2 — Command Center</title>
+<link rel="stylesheet" href="soc-theme.css">
+<style>
+  body { background:var(--bg-base); font-family:var(--font-sans); color:var(--text-primary); margin:0; }
+  .portal-header { position:sticky; top:0; z-index:100; background:rgba(10,14,26,0.95); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 var(--space-6); height:var(--header-h); }
+  .portal-logo { font-size:18px; font-weight:700; color:var(--text-primary); letter-spacing:-.02em; }
+  .portal-logo span { color:var(--accent); }
+  .portal-meta { display:flex; align-items:center; gap:var(--space-4); font-size:13px; color:var(--text-muted); }
+  .portal-clock { font-family:var(--font-mono); color:var(--text-secondary); }
+  .hero-bar { background:linear-gradient(135deg,rgba(59,130,246,0.12) 0%,rgba(139,92,246,0.08) 100%); border-bottom:1px solid var(--border); padding:var(--space-6) var(--space-6) var(--space-5); }
+  .hero-bar h2 { margin:0 0 6px; font-size:22px; font-weight:700; }
+  .hero-bar p  { margin:0 0 var(--space-5); color:var(--text-secondary); font-size:14px; max-width:700px; }
+  .hero-kpis { display:grid; grid-template-columns:repeat(6,1fr); gap:var(--space-3); }
+  @media(max-width:900px){ .hero-kpis { grid-template-columns:repeat(3,1fr); } }
+  .portal-body { padding:var(--space-6); }
+  .section-title { font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); margin:0 0 var(--space-4); }
+  .dash-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:var(--space-4); margin-bottom:var(--space-6); }
+  .dash-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-md); padding:var(--space-4) var(--space-5); text-decoration:none; color:inherit; display:block; transition:border-color .15s,transform .15s; }
+  .dash-card:hover { border-color:var(--accent); transform:translateY(-2px); }
+  .dash-card-icon { font-size:24px; margin-bottom:var(--space-2); }
+  .dash-card-name { font-size:15px; font-weight:600; margin-bottom:4px; }
+  .dash-card-desc { font-size:12px; color:var(--text-muted); margin-bottom:var(--space-3); }
+  .dash-card-tags { display:flex; gap:6px; flex-wrap:wrap; }
+  .tools-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:var(--space-3); margin-bottom:var(--space-6); }
+  .tool-link { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:var(--space-3) var(--space-4); text-decoration:none; color:var(--text-secondary); font-size:13px; display:flex; align-items:center; gap:8px; transition:border-color .15s,color .15s; }
+  .tool-link:hover { border-color:var(--accent); color:var(--text-primary); }
+  .tool-port { margin-left:auto; font-family:var(--font-mono); font-size:11px; color:var(--text-muted); }
+  .qs-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:var(--space-4); margin-bottom:var(--space-6); }
+  .qs-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-md); padding:var(--space-4); }
+  .qs-card h4 { margin:0 0 var(--space-3); font-size:13px; color:var(--text-secondary); font-weight:600; }
+  .ticker { position:fixed; bottom:0; left:0; right:0; background:rgba(10,14,26,0.95); border-top:1px solid var(--border); padding:6px var(--space-4); display:flex; align-items:center; gap:var(--space-4); font-size:12px; overflow:hidden; }
+  .ticker-label { color:var(--accent); font-weight:700; font-family:var(--font-mono); white-space:nowrap; }
+  .ticker-track { flex:1; overflow:hidden; }
+  .ticker-inner { display:flex; gap:var(--space-6); animation:scroll-left 40s linear infinite; white-space:nowrap; }
+  @keyframes scroll-left { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+  .ticker-item { color:var(--text-muted); }
+  .ticker-item .t-high { color:var(--high); }
+  .ticker-item .t-crit { color:var(--critical); }
+  pb { padding-bottom: 40px; display:block; }
+</style>
+</head>
+<body>
+
+<header class="portal-header">
+  <div class="portal-logo">SOC Lab <span>v2</span></div>
+  <div class="portal-meta">
+    <span class="status-dot green"></span>
+    <span>12 services running</span>
+    <span class="portal-clock" id="clock">--:--:-- UTC</span>
+  </div>
+</header>
+
+<div class="hero-bar">
+  <h2>Security Operations Command Center</h2>
+  <p>Full-stack SOC lab — SIEM, NSM, SOAR, Threat Intel, DFIR, Attack Simulation, and AI-powered analysis. 100% open-source, runs locally via Docker Compose.</p>
+  <div class="hero-kpis">
+    <div class="kpi-card critical">
+      <div class="kpi-label">Critical Alerts</div>
+      <div class="kpi-value">9</div>
+      <div class="kpi-sub">↑ 3 new</div>
+    </div>
+    <div class="kpi-card high">
+      <div class="kpi-label">High Severity</div>
+      <div class="kpi-value">127</div>
+      <div class="kpi-sub">14 unreviewed</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Events (24h)</div>
+      <div class="kpi-value">48K</div>
+      <div class="kpi-sub">↑ 12%</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Open Cases</div>
+      <div class="kpi-value">2</div>
+      <div class="kpi-sub">IRIS tracked</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">IOCs Active</div>
+      <div class="kpi-value">12,847</div>
+      <div class="kpi-sub">4 feeds</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Detection Rate</div>
+      <div class="kpi-value">85%</div>
+      <div class="kpi-sub">APT-29 sim</div>
+    </div>
+  </div>
+</div>
+
+<div class="portal-body">
+
+  <div class="section-title">Dashboards</div>
+  <div class="dash-grid">
+
+    <a href="01_soc_overview.html" class="dash-card">
+      <div class="dash-card-icon">🖥️</div>
+      <div class="dash-card-name">SOC Overview</div>
+      <div class="dash-card-desc">Live alert feed, MITRE heatmap, sensor status, top IPs</div>
+      <div class="dash-card-tags"><span class="badge badge-critical">Live</span><span class="badge badge-low">WebSocket</span></div>
+    </a>
+
+    <a href="02_opensearch_siem.html" class="dash-card">
+      <div class="dash-card-icon">🔍</div>
+      <div class="dash-card-name">OpenSearch SIEM</div>
+      <div class="dash-card-desc">24h event timeline, severity breakdown, ElastAlert2 rules</div>
+      <div class="dash-card-tags"><span class="badge badge-high">9 critical</span></div>
+    </a>
+
+    <a href="03_zeek_network.html" class="dash-card">
+      <div class="dash-card-icon">🌐</div>
+      <div class="dash-card-name">Zeek NSM</div>
+      <div class="dash-card-desc">Live conn.log stream, protocol analysis, DNS anomaly detection</div>
+      <div class="dash-card-tags"><span class="badge badge-medium">T1557.001</span></div>
+    </a>
+
+    <a href="04_suricata_ids.html" class="dash-card">
+      <div class="dash-card-icon">🛡️</div>
+      <div class="dash-card-name">Suricata IDS</div>
+      <div class="dash-card-desc">EVE JSON alert feed, category breakdown, top signatures</div>
+      <div class="dash-card-tags"><span class="badge badge-critical">47 blocked</span></div>
+    </a>
+
+    <a href="05_ai_agents.html" class="dash-card">
+      <div class="dash-card-icon">🤖</div>
+      <div class="dash-card-name">AI Agents</div>
+      <div class="dash-card-desc">CrewAI threat analyst, incident responder, threat hunter, detection engineer</div>
+      <div class="dash-card-tags"><span class="badge badge-low">Ollama LLM</span></div>
+    </a>
+
+    <a href="06_iris_cases.html" class="dash-card">
+      <div class="dash-card-icon">📋</div>
+      <div class="dash-card-name">DFIR-IRIS</div>
+      <div class="dash-card-desc">Case management, attack timeline, IOC tracker</div>
+      <div class="dash-card-tags"><span class="badge badge-critical">2 open</span></div>
+    </a>
+
+    <a href="07_caldera_attack.html" class="dash-card">
+      <div class="dash-card-icon">⚔️</div>
+      <div class="dash-card-name">Caldera Attack Sim</div>
+      <div class="dash-card-desc">APT-29 emulation, ATT&amp;CK coverage matrix, detection scoring</div>
+      <div class="dash-card-tags"><span class="badge badge-medium">85% detected</span></div>
+    </a>
+
+    <a href="08_misp_ti.html" class="dash-card">
+      <div class="dash-card-icon">🕵️</div>
+      <div class="dash-card-name">MISP Threat Intel</div>
+      <div class="dash-card-desc">IOC lookup, feed status, APT-29 attribution card</div>
+      <div class="dash-card-tags"><span class="badge badge-low">12,847 IOCs</span></div>
+    </a>
+
+    <a href="09_velociraptor.html" class="dash-card">
+      <div class="dash-card-icon">🦖</div>
+      <div class="dash-card-name">Velociraptor DFIR</div>
+      <div class="dash-card-desc">Live forensic hunts, process analysis, VQL query console</div>
+      <div class="dash-card-tags"><span class="badge badge-critical">3 suspicious</span></div>
+    </a>
+
+    <a href="10_responder_redteam.html" class="dash-card">
+      <div class="dash-card-icon">🔴</div>
+      <div class="dash-card-name">Red Team / Responder</div>
+      <div class="dash-card-desc">LLMNR poisoning, NTLMv2 capture, blue team response timeline</div>
+      <div class="dash-card-tags"><span class="badge badge-critical">Lab only</span></div>
+    </a>
+
+  </div>
+
+  <div class="section-title">Direct Tool Access</div>
+  <div class="tools-grid">
+    <a href="http://localhost:5601" target="_blank" class="tool-link">🔍 OpenSearch Dashboards <span class="tool-port">:5601</span></a>
+    <a href="http://localhost:4460" target="_blank" class="tool-link">📋 DFIR-IRIS <span class="tool-port">:4460</span></a>
+    <a href="http://localhost:8888" target="_blank" class="tool-link">⚔️ MITRE Caldera <span class="tool-port">:8888</span></a>
+    <a href="http://localhost:8889" target="_blank" class="tool-link">🦖 Velociraptor <span class="tool-port">:8889</span></a>
+    <a href="http://localhost:4000" target="_blank" class="tool-link">🕵️ MISP <span class="tool-port">:4000</span></a>
+    <a href="http://localhost:9000" target="_blank" class="tool-link">⚡ StackStorm <span class="tool-port">:9000</span></a>
+    <a href="http://localhost:8000/docs" target="_blank" class="tool-link">🤖 AI Agents API <span class="tool-port">:8000</span></a>
+    <a href="http://localhost:11434" target="_blank" class="tool-link">🧠 Ollama LLM <span class="tool-port">:11434</span></a>
+    <a href="http://localhost:9200" target="_blank" class="tool-link">📦 OpenSearch API <span class="tool-port">:9200</span></a>
+  </div>
+
+  <div class="section-title">Quick Start</div>
+  <div class="qs-grid">
+
+    <div class="qs-card">
+      <h4>1 · Setup &amp; Deploy</h4>
+      <div class="log-block">git clone &lt;repo&gt; soc-lab &amp;&amp; cd soc-lab
+chmod +x setup.sh health-check.sh simulate-attack.sh
+sudo ./setup.sh</div>
+    </div>
+
+    <div class="qs-card">
+      <h4>2 · Run APT-29 Simulation</h4>
+      <div class="log-block">./simulate-attack.sh apt29
+# Injects 13 MITRE ATT&CK events
+# into OpenSearch soc-logs-* index
+
+./simulate-attack.sh verify
+# Confirms events were indexed</div>
+    </div>
+
+    <div class="qs-card">
+      <h4>3 · Optional — Red Team Profile</h4>
+      <div class="log-block">docker compose --profile redteam up -d
+# Starts Responder on lab VLAN
+# LLMNR/NBT-NS poisoning active
+# Lab network only!</div>
+    </div>
+
+  </div>
+
+</div>
+
+<pb></pb>
+
+<!-- Ticker -->
+<div class="ticker">
+  <span class="ticker-label">LIVE</span>
+  <div class="ticker-track">
+    <div class="ticker-inner" id="ticker-inner">
+      <span class="ticker-item"><span class="t-crit">[CRITICAL]</span> T1003.001 LSASS dump — WKSTN-FINANCE-01 · 185.220.101.45</span>
+      <span class="ticker-item"><span class="t-high">[HIGH]</span> T1110.001 Password spray — 247 failures in 60s against DC-CORP-01</span>
+      <span class="ticker-item"><span class="t-crit">[CRITICAL]</span> T1041 Exfil 4.2 GB to Tor exit node — port 443</span>
+      <span class="ticker-item"><span class="t-high">[HIGH]</span> T1557.001 LLMNR poisoning — CORP\jsmith hash captured</span>
+      <span class="ticker-item">[MISP] New IOC matched: 185.220.101.45 — APT-29 Cozy Bear confirmed</span>
+      <span class="ticker-item"><span class="t-crit">[CRITICAL]</span> Suricata SID 2030358 — Cobalt Strike Beacon blocked</span>
+      <span class="ticker-item">[IRIS] Case INC-2026-001 updated — lateral movement to DC-CORP-01 confirmed</span>
+      <span class="ticker-item">[AI] Threat Analyst agent: 85% confidence APT-29 attribution · 13 TTPs matched</span>
+      <span class="ticker-item"><span class="t-crit">[CRITICAL]</span> T1562.001 Defender disabled — detection gap identified</span>
+      <span class="ticker-item">[CALDERA] APT-29 operation complete — 11/13 techniques detected (85%)</span>
+      <!-- duplicate for seamless loop -->
+      <span class="ticker-item"><span class="t-crit">[CRITICAL]</span> T1003.001 LSASS dump — WKSTN-FINANCE-01 · 185.220.101.45</span>
+      <span class="ticker-item"><span class="t-high">[HIGH]</span> T1110.001 Password spray — 247 failures in 60s against DC-CORP-01</span>
+      <span class="ticker-item"><span class="t-crit">[CRITICAL]</span> T1041 Exfil 4.2 GB to Tor exit node — port 443</span>
+      <span class="ticker-item"><span class="t-high">[HIGH]</span> T1557.001 LLMNR poisoning — CORP\jsmith hash captured</span>
+      <span class="ticker-item">[MISP] New IOC matched: 185.220.101.45 — APT-29 Cozy Bear confirmed</span>
+      <span class="ticker-item"><span class="t-crit">[CRITICAL]</span> Suricata SID 2030358 — Cobalt Strike Beacon blocked</span>
+      <span class="ticker-item">[IRIS] Case INC-2026-001 updated — lateral movement to DC-CORP-01 confirmed</span>
+      <span class="ticker-item">[AI] Threat Analyst agent: 85% confidence APT-29 attribution · 13 TTPs matched</span>
+      <span class="ticker-item"><span class="t-crit">[CRITICAL]</span> T1562.001 Defender disabled — detection gap identified</span>
+      <span class="ticker-item">[CALDERA] APT-29 operation complete — 11/13 techniques detected (85%)</span>
+    </div>
+  </div>
+</div>
+
+<script>
+// UTC clock
+function updateClock() {
+  const now = new Date();
+  const h = String(now.getUTCHours()).padStart(2,'0');
+  const m = String(now.getUTCMinutes()).padStart(2,'0');
+  const s = String(now.getUTCSeconds()).padStart(2,'0');
+  document.getElementById('clock').textContent = `${h}:${m}:${s} UTC`;
+}
+updateClock();
+setInterval(updateClock, 1000);
+</script>
+</body>
+</html>

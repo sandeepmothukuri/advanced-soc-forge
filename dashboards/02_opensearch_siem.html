@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OpenSearch SIEM — SOC Lab</title>
+<link rel="stylesheet" href="soc-theme.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="layout">
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">SOC Lab v2</div>
+    <ul class="sidebar-nav">
+      <li><a href="index.html">⌂ Portal</a></li>
+      <li><a href="01_soc_overview.html">Overview</a></li>
+      <li><a href="02_opensearch_siem.html" class="active">OpenSearch SIEM</a></li>
+      <li><a href="03_zeek_network.html">Zeek NSM</a></li>
+      <li><a href="04_suricata_ids.html">Suricata IDS</a></li>
+      <li><a href="05_ai_agents.html">AI Agents</a></li>
+      <li><a href="06_iris_cases.html">DFIR-IRIS</a></li>
+      <li><a href="07_caldera_attack.html">Caldera</a></li>
+      <li><a href="08_misp_ti.html">MISP Threat Intel</a></li>
+      <li><a href="09_velociraptor.html">Velociraptor</a></li>
+      <li><a href="10_responder_redteam.html">Red Team</a></li>
+    </ul>
+    <div class="sidebar-footer">MITRE ATT&amp;CK v14</div>
+  </nav>
+
+  <!-- Main -->
+  <div class="main-wrap">
+    <header class="topbar">
+      <span class="topbar-title">OpenSearch SIEM</span>
+      <div class="topbar-meta">
+        <span class="status-dot green"></span> Cluster healthy
+        <span style="margin-left:var(--space-4)">Index: soc-logs-*</span>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <!-- KPIs -->
+      <div class="kpi-row">
+        <div class="kpi-card"><div class="kpi-label">Total Events (24h)</div><div class="kpi-value">48,291</div><div class="kpi-sub">↑ 12% vs yesterday</div></div>
+        <div class="kpi-card high"><div class="kpi-label">High Severity</div><div class="kpi-value">127</div><div class="kpi-sub">14 unreviewed</div></div>
+        <div class="kpi-card critical"><div class="kpi-label">Critical Alerts</div><div class="kpi-value">9</div><div class="kpi-sub">3 open cases</div></div>
+        <div class="kpi-card"><div class="kpi-label">Active Indices</div><div class="kpi-value">4</div><div class="kpi-sub">2 nodes healthy</div></div>
+      </div>
+
+      <div class="grid-2">
+
+        <!-- 24h Timeline -->
+        <div class="card" style="grid-column:1/-1">
+          <div class="card-header">
+            <span class="card-title">📈 Event Volume — 24h Timeline</span>
+            <span class="badge badge-low">Live</span>
+          </div>
+          <div class="card-body">
+            <div class="chart-wrap" style="height:200px">
+              <canvas id="timelineChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Severity Breakdown -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">🔴 Severity Breakdown</span></div>
+          <div class="card-body">
+            <div class="chart-wrap" style="height:220px">
+              <canvas id="sevChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Active Indices -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">🗄️ Active Indices</span></div>
+          <div class="card-body">
+            <table class="data-table">
+              <thead><tr><th>Index</th><th>Docs</th><th>Size</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td class="mono">soc-logs-2026.04.25</td><td class="mono">18,432</td><td class="mono">2.1 GB</td><td><span class="badge badge-low">GREEN</span></td></tr>
+                <tr><td class="mono">soc-logs-2026.04.24</td><td class="mono">21,105</td><td class="mono">2.4 GB</td><td><span class="badge badge-low">GREEN</span></td></tr>
+                <tr><td class="mono">soc-logs-2026.04.23</td><td class="mono">19,887</td><td class="mono">2.2 GB</td><td><span class="badge badge-low">GREEN</span></td></tr>
+                <tr><td class="mono">soc-logs-2026.04.22</td><td class="mono">15,340</td><td class="mono">1.8 GB</td><td><span class="badge badge-medium">YELLOW</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Top Source IPs -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">🌐 Top Source IPs</span></div>
+          <div class="card-body">
+            <table class="data-table">
+              <thead><tr><th>IP</th><th>Events</th><th>Technique</th><th>Risk</th></tr></thead>
+              <tbody>
+                <tr><td class="mono">185.220.101.45</td><td class="mono">1,204</td><td><span class="technique-tag">T1566.001</span></td><td><span class="badge badge-critical">CRITICAL</span></td></tr>
+                <tr><td class="mono">10.0.99.15</td><td class="mono">847</td><td><span class="technique-tag">T1110.001</span></td><td><span class="badge badge-high">HIGH</span></td></tr>
+                <tr><td class="mono">10.0.1.50</td><td class="mono">612</td><td><span class="technique-tag">T1059.001</span></td><td><span class="badge badge-high">HIGH</span></td></tr>
+                <tr><td class="mono">45.132.227.89</td><td class="mono">389</td><td><span class="technique-tag">T1133</span></td><td><span class="badge badge-medium">MED</span></td></tr>
+                <tr><td class="mono">10.0.3.45</td><td class="mono">203</td><td><span class="technique-tag">T1039</span></td><td><span class="badge badge-medium">MED</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ElastAlert2 Rules -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">⚡ ElastAlert2 Rules</span></div>
+          <div class="card-body">
+            <table class="data-table">
+              <thead><tr><th>Rule</th><th>Technique</th><th>Fires (24h)</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td>Brute Force Spray</td><td><span class="technique-tag">T1110</span></td><td class="mono">14</td><td><span class="badge badge-low">ACTIVE</span></td></tr>
+                <tr><td>LSASS Dump</td><td><span class="technique-tag">T1003.001</span></td><td class="mono">3</td><td><span class="badge badge-low">ACTIVE</span></td></tr>
+                <tr><td>DNS Tunneling</td><td><span class="technique-tag">T1071.004</span></td><td class="mono">7</td><td><span class="badge badge-low">ACTIVE</span></td></tr>
+                <tr><td>Lateral SMB</td><td><span class="technique-tag">T1021.002</span></td><td class="mono">2</td><td><span class="badge badge-low">ACTIVE</span></td></tr>
+                <tr><td>Scheduled Task</td><td><span class="technique-tag">T1053.005</span></td><td class="mono">5</td><td><span class="badge badge-low">ACTIVE</span></td></tr>
+                <tr><td>Defender Disabled</td><td><span class="technique-tag">T1562.001</span></td><td class="mono">1</td><td><span class="badge badge-low">ACTIVE</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+// 24h timeline
+const hours = Array.from({length:24}, (_,i) => `${String(i).padStart(2,'0')}:00`);
+const counts = [120,98,75,60,55,80,210,380,520,640,710,695,580,490,550,620,740,810,780,660,540,430,310,220];
+new Chart(document.getElementById('timelineChart'), {
+  type:'line',
+  data:{
+    labels:hours,
+    datasets:[{
+      label:'Events',
+      data:counts,
+      borderColor:'#3b82f6',
+      backgroundColor:'rgba(59,130,246,0.1)',
+      fill:true,
+      tension:0.3,
+      pointRadius:2
+    }]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{
+      x:{ticks:{color:'#94a3b8',font:{size:10}}, grid:{color:'rgba(255,255,255,0.05)'}},
+      y:{ticks:{color:'#94a3b8',font:{size:10}}, grid:{color:'rgba(255,255,255,0.05)'}}
+    }
+  }
+});
+
+// Severity doughnut
+new Chart(document.getElementById('sevChart'), {
+  type:'doughnut',
+  data:{
+    labels:['Critical','High','Medium','Low','Info'],
+    datasets:[{
+      data:[9,127,834,2104,45217],
+      backgroundColor:['#ef4444','#f97316','#eab308','#22c55e','#3b82f6'],
+      borderWidth:0
+    }]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{position:'right',labels:{color:'#94a3b8',font:{size:11}}}}
+  }
+});
+</script>
+</body>
+</html>

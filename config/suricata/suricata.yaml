@@ -1,0 +1,69 @@
+%YAML 1.1
+---
+# ================================================================
+#  Suricata 7.0 — Network IDS/IPS
+#  Security Onion core detection engine
+# ================================================================
+vars:
+  address-groups:
+    HOME_NET: "${SURICATA_HOME_NET}"
+    EXTERNAL_NET: "!$HOME_NET"
+    HTTP_SERVERS: "$HOME_NET"
+    SMTP_SERVERS: "$HOME_NET"
+    SQL_SERVERS: "$HOME_NET"
+    DNS_SERVERS: "$HOME_NET"
+    TELNET_SERVERS: "$HOME_NET"
+
+af-packet:
+  - interface: eth0
+    threads: auto
+    cluster-id: 99
+    cluster-type: cluster_flow
+    defrag: yes
+
+outputs:
+  - eve-log:
+      enabled: yes
+      filetype: regular
+      filename: /var/log/suricata/eve.json
+      types:
+        - alert:
+            payload: yes
+            payload-printable: yes
+            metadata: yes
+            http-body: yes
+            tagged-packets: yes
+        - anomaly:
+            enabled: yes
+        - http:
+            extended: yes
+        - dns: ~
+        - tls:
+            extended: yes
+        - files:
+            force-magic: yes
+        - smtp: ~
+        - flow: ~
+        - netflow: ~
+
+rule-files:
+  - /var/lib/suricata/rules/suricata.rules
+  - /etc/suricata/rules/custom/*.rules
+
+detection:
+  profile: high
+  custom-values:
+    toclient-src-groups: 2
+    toclient-dst-groups: 2
+    toserver-src-groups: 4
+    toserver-dst-groups: 4
+
+threading:
+  set-cpu-affinity: no
+  cpu-affinity:
+    - management-cpu-set:
+        cpu: [0]
+    - receive-cpu-set:
+        cpu: [0]
+    - worker-cpu-set:
+        cpu: ["all"]

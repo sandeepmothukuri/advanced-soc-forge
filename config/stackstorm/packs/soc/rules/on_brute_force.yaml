@@ -1,0 +1,22 @@
+---
+name: on_brute_force_alert
+pack: soc
+description: "Trigger brute force response when ElastAlert fires T1110"
+enabled: true
+trigger:
+  type: core.st2.webhook
+  parameters:
+    url: elastalert
+criteria:
+  trigger.body.rule_name:
+    type: iequals
+    pattern: "T1110_brute_force"
+action:
+  ref: soc.create_incident
+  parameters:
+    title: "Brute Force Attack — {{trigger.body.source_ip}}"
+    description: "ElastAlert detected >10 failed logins in 5 minutes from {{trigger.body.source_ip}}"
+    severity: 3
+    source_ip: "{{trigger.body.source_ip}}"
+    mitre_technique: T1110
+    trigger_ai: true

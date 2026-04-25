@@ -1,0 +1,52 @@
+# MITRE Caldera — SOC Lab configuration
+# Adversary emulation platform for attack simulation
+
+port: 8888
+host: 0.0.0.0
+exfil_dir: /tmp/caldera-exfil
+
+# Users — change passwords in production
+users:
+  red:
+    red: "RedTeamPass123!"     # red team operator
+  blue:
+    blue: "BlueTeamPass123!"   # blue team / SOC observer
+
+# API key for StackStorm/AI agent integration
+api_key_red: "${CALDERA_API_KEY_RED:-CalderaRedKey_CHANGEME}"
+api_key_blue: "${CALDERA_API_KEY_BLUE:-CalderaBlueKey_CHANGEME}"
+
+# Plugin list
+plugins:
+  - access
+  - atomic
+  - compass
+  - debrief
+  - fieldmanual
+  - gameboard
+  - manx
+  - response
+  - sandcat
+  - stockpile
+  - training
+
+# Sandcat agent C2 settings
+app.contact.http: http://caldera:8888
+app.contact.tcp: 0.0.0.0:7010
+app.contact.udp: 0.0.0.0:7011
+app.contact.websocket: 0.0.0.0:7012
+
+# Logging
+logging:
+  level: INFO
+  log_file: /var/log/caldera/caldera.log
+
+# Database — uses in-memory by default, mount for persistence
+database:
+  type: memory
+
+# Obfuscators
+obfuscate: plain-text
+
+# Exfil channel
+exfil_url: http://caldera:8888

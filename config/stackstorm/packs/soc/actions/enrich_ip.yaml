@@ -1,0 +1,22 @@
+---
+name: enrich_ip
+pack: soc
+runner_type: python-script
+description: >
+  Enrich an IP address using MISP, AbuseIPDB (free tier), and local blocklists.
+  Returns threat intel summary: threat score, tags, known malware families.
+enabled: true
+entry_point: enrich_ip.py
+parameters:
+  ip_address:
+    type: string
+    description: "IP address to enrich"
+    required: true
+  check_misp:
+    type: boolean
+    description: "Query MISP threat intelligence"
+    default: true
+  check_abuseipdb:
+    type: boolean
+    description: "Query AbuseIPDB (requires free API key in .env)"
+    default: false

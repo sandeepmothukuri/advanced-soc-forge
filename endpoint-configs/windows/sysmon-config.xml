@@ -1,0 +1,183 @@
+<Sysmon schemaversion="4.90">
+  <!-- SOC Lab Sysmon Configuration v2.0 -->
+  <!-- Captures events critical for MITRE ATT&CK detection -->
+  <!-- Reference: SwiftOnSecurity/sysmon-config + SOC Lab customisations -->
+
+  <HashAlgorithms>md5,sha256,IMPHASH</HashAlgorithms>
+  <CheckRevocation/>
+
+  <EventFiltering>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         EVENT ID 1 — Process Creation
+         Captures: command lines, parent process, hashes, user context
+         Detects: T1059 (cmd/PS), T1047 (WMI), T1003 (credential tools)
+    ═══════════════════════════════════════════════════════════════════════════ -->
+    <RuleGroup name="ProcessCreate" groupRelation="or">
+      <ProcessCreate onmatch="exclude">
+        <!-- Exclude high-volume benign processes -->
+        <Image condition="is">C:\Windows\System32\conhost.exe</Image>
+        <Image condition="is">C:\Windows\System32\werfault.exe</Image>
+        <CommandLine condition="contains">GoogleUpdate.exe</CommandLine>
+      </ProcessCreate>
+    </RuleGroup>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         EVENT ID 2 — File Creation Time Changed (T1099 timestomping)
+    ═══════════════════════════════════════════════════════════════════════════ -->
+    <RuleGroup name="FileCreateTime" groupRelation="or">
+      <FileCreateTime onmatch="include">
+        <TargetFilename condition="contains">\AppData\</TargetFilename>
+        <TargetFilename condition="contains">\Temp\</TargetFilename>
+        <TargetFilename condition="end with">.exe</TargetFilename>
+        <TargetFilename condition="end with">.dll</TargetFilename>
+      </FileCreateTime>
+    </RuleGroup>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         EVENT ID 3 — Network Connection
+         Detects: T1021 lateral movement, T1071 C2, T1046 scanning
+    ═══════════════════════════════════════════════════════════════════════════ -->
+    <RuleGroup name="NetworkConnect" groupRelation="or">
+      <NetworkConnect onmatch="include">
+        <!-- Suspicious outbound to non-standard ports -->
+        <DestinationPort condition="is">4444</DestinationPort>
+        <DestinationPort condition="is">1337</DestinationPort>
+        <DestinationPort condition="is">8443</DestinationPort>
+        <!-- Lateral movement ports -->
+        <DestinationPort condition="is">445</DestinationPort>
+        <DestinationPort condition="is">3389</DestinationPort>
+        <DestinationPort condition="is">5985</DestinationPort>
+        <DestinationPort condition="is">5986</DestinationPort>
+        <!-- WMI/DCOM -->
+        <DestinationPort condition="is">135</DestinationPort>
+        <!-- From LOLBINs -->
+        <Image condition="contains">powershell</Image>
+        <Image condition="is">C:\Windows\System32\wscript.exe</Image>
+        <Image condition="is">C:\Windows\System32\mshta.exe</Image>
+        <Image condition="is">C:\Windows\System32\certutil.exe</Image>
+      </NetworkConnect>
+      <NetworkConnect onmatch="exclude">
+        <Image condition="is">C:\Windows\System32\svchost.exe</Image>
+        <DestinationIp condition="is">127.0.0.1</DestinationIp>
+        <DestinationIp condition="is">::1</DestinationIp>
+      </NetworkConnect>
+    </RuleGroup>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         EVENT ID 7 — Image Loaded (DLL injection: T1055)
+    ═══════════════════════════════════════════════════════════════════════════ -->
+    <RuleGroup name="ImageLoad" groupRelation="or">
+      <ImageLoad onmatch="include">
+        <Signed condition="is">false</Signed>
+        <ImageLoaded condition="contains">\Temp\</ImageLoaded>
+        <ImageLoaded condition="contains">\AppData\</ImageLoaded>
+      </ImageLoad>
+    </RuleGroup>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         EVENT ID 8 — CreateRemoteThread (Process injection: T1055)
+    ═══════════════════════════════════════════════════════════════════════════ -->
+    <RuleGroup name="CreateRemoteThread" groupRelation="or">
+      <CreateRemoteThread onmatch="include">
+        <TargetImage condition="is">C:\Windows\System32\lsass.exe</TargetImage>
+        <TargetImage condition="contains">explorer.exe</TargetImage>
+        <TargetImage condition="contains">svchost.exe</TargetImage>
+      </CreateRemoteThread>
+    </RuleGroup>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         EVENT ID 10 — ProcessAccess
+         Detects: T1003.001 LSASS credential dumping (mimikatz, procdump)
+    ═══════════════════════════════════════════════════════════════════════════ -->
+    <RuleGroup name="ProcessAccess" groupRelation="or">
+      <ProcessAccess onmatch="include">
+        <TargetImage condition="is">C:\Windows\System32\lsass.exe</TargetImage>
+      </ProcessAccess>
+      <ProcessAccess onmatch="exclude">
+        <SourceImage condition="is">C:\Windows\System32\wininit.exe</SourceImage>
+        <SourceImage condition="is">C:\Windows\System32\services.exe</SourceImage>
+        <SourceImage condition="is">C:\Windows\System32\csrss.exe</SourceImage>
+        <SourceImage condition="is">C:\Windows\System32\MsMpEng.exe</SourceImage>
+      </ProcessAccess>
+    </RuleGroup>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         EVENT ID 11 — FileCreate
+         Detects: Dropped payloads, ransomware staging, webshells
+    ═══════════════════════════════════════════════════════════════════════════ -->
+    <RuleGroup name="FileCreate" groupRelation="or">
+      <FileCreate onmatch="include">
+        <TargetFilename condition="contains">\Temp\</TargetFilename>
+        <TargetFilename condition="end with">.exe</TargetFilename>
+        <TargetFilename condition="end with">.dll</TargetFilename>
+        <TargetFilename condition="end with">.ps1</TargetFilename>
+        <TargetFilename condition="end with">.vbs</TargetFilename>
+        <TargetFilename condition="end with">.bat</TargetFilename>
+        <TargetFilename condition="end with">.hta</TargetFilename>
+        <TargetFilename condition="contains">\inetpub\</TargetFilename>
+        <!-- Ransomware extensions -->
+        <TargetFilename condition="end with">.locked</TargetFilename>
+        <TargetFilename condition="end with">.enc</TargetFilename>
+        <TargetFilename condition="end with">.crypted</TargetFilename>
+      </FileCreate>
+    </RuleGroup>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         EVENT ID 12/13 — Registry Create/Modify
+         Detects: T1547.001 Run keys, T1112 registry modification
+    ═══════════════════════════════════════════════════════════════════════════ -->
+    <RuleGroup name="RegistryEvent" groupRelation="or">
+      <RegistryEvent onmatch="include">
+        <TargetObject condition="contains">SOFTWARE\Microsoft\Windows\CurrentVersion\Run</TargetObject>
+        <TargetObject condition="contains">SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon</TargetObject>
+        <TargetObject condition="contains">SYSTEM\CurrentControlSet\Services</TargetObject>
+        <TargetObject condition="contains">SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer\Run</TargetObject>
+        <TargetObject condition="contains">Environment\UserInitMprLogonScript</TargetObject>
+      </RegistryEvent>
+    </RuleGroup>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         EVENT ID 15 — FileCreateStreamHash (Alternate Data Streams)
+         Detects: T1564.004 ADS hiding
+    ═══════════════════════════════════════════════════════════════════════════ -->
+    <RuleGroup name="FileCreateStreamHash" groupRelation="or">
+      <FileCreateStreamHash onmatch="include">
+        <TargetFilename condition="contains">:Zone.Identifier</TargetFilename>
+      </FileCreateStreamHash>
+    </RuleGroup>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         EVENT ID 17/18 — Named Pipe (Cobalt Strike, PSExec: T1021)
+    ═══════════════════════════════════════════════════════════════════════════ -->
+    <RuleGroup name="PipeEvent" groupRelation="or">
+      <PipeEvent onmatch="include">
+        <PipeName condition="contains">MSSE-</PipeName>
+        <PipeName condition="contains">postex_</PipeName>
+        <PipeName condition="contains">status_</PipeName>
+        <PipeName condition="contains">msagent_</PipeName>
+        <PipeName condition="contains">PSEXESVC</PipeName>
+        <PipeName condition="contains">paexec</PipeName>
+        <PipeName condition="contains">remcom</PipeName>
+      </PipeEvent>
+    </RuleGroup>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         EVENT ID 22 — DNS Query
+         Detects: T1071.004 DNS tunneling, C2 domains
+    ═══════════════════════════════════════════════════════════════════════════ -->
+    <RuleGroup name="DnsQuery" groupRelation="or">
+      <DnsQuery onmatch="include">
+        <QueryName condition="end with">.onion</QueryName>
+        <QueryName condition="contains">duckdns</QueryName>
+        <!-- Exclude CDN noise -->
+      </DnsQuery>
+      <DnsQuery onmatch="exclude">
+        <QueryName condition="end with">.microsoft.com</QueryName>
+        <QueryName condition="end with">.windows.com</QueryName>
+        <QueryName condition="end with">.windowsupdate.com</QueryName>
+      </DnsQuery>
+    </RuleGroup>
+
+  </EventFiltering>
+</Sysmon>

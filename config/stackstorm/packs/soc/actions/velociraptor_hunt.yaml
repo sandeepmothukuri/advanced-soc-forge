@@ -1,0 +1,35 @@
+---
+name: velociraptor_hunt
+pack: soc
+runner_type: python-script
+description: >
+  Launch a live forensics collection on an endpoint using Velociraptor.
+  Supports predefined artifact collections: process_list, network,
+  evidence, scheduled_tasks, memory acquisition, event_logs.
+enabled: true
+entry_point: velociraptor_hunt.py
+parameters:
+  hostname:
+    type: string
+    description: "Target hostname or FQDN"
+    required: true
+  artifact:
+    type: string
+    description: "Artifact to collect (friendly key or full VQL artifact name)"
+    required: true
+    enum:
+      - process_list
+      - network
+      - evidence
+      - scheduled_tasks
+      - services
+      - registry_run
+      - event_logs
+      - yara_memory
+      - linux_processes
+      - linux_network
+      - linux_bash
+  case_id:
+    type: integer
+    description: "IRIS case ID to attach results to (0 = don't attach)"
+    default: 0

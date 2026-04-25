@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SOC Overview — SOC Lab</title>
+  <link rel="stylesheet" href="soc-theme.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="layout">
+
+  <nav class="sidebar">
+    <div class="sidebar-brand">
+      <a href="index.html" class="brand-icon" style="text-decoration:none;font-size:15px;">🛡️</a>
+      <div class="brand-text">
+        <span class="brand-title">SOC Lab v2</span>
+        <span class="brand-sub">COMMAND CENTER</span>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Dashboards</div>
+      <ul class="sidebar-nav">
+        <li class="nav-item"><a href="01_soc_overview.html" class="active"><span class="nav-icon">📊</span><span>SOC Overview</span></a></li>
+        <li class="nav-item"><a href="02_opensearch_siem.html"><span class="nav-icon">🔍</span><span>OpenSearch SIEM</span></a></li>
+        <li class="nav-item"><a href="03_zeek_network.html"><span class="nav-icon">🌐</span><span>Zeek Network</span></a></li>
+        <li class="nav-item"><a href="04_suricata_ids.html"><span class="nav-icon">🚨</span><span>Suricata IDS</span></a></li>
+        <li class="nav-item"><a href="05_ai_agents.html"><span class="nav-icon">🤖</span><span>AI Agents</span></a></li>
+        <li class="nav-item"><a href="06_iris_cases.html"><span class="nav-icon">📋</span><span>DFIR-IRIS</span></a></li>
+        <li class="nav-item"><a href="07_caldera_attack.html"><span class="nav-icon">⚔️</span><span>Caldera</span></a></li>
+        <li class="nav-item"><a href="08_misp_ti.html"><span class="nav-icon">🌍</span><span>MISP Intel</span></a></li>
+        <li class="nav-item"><a href="09_velociraptor.html"><span class="nav-icon">🦖</span><span>Velociraptor</span></a></li>
+        <li class="nav-item"><a href="10_responder_redteam.html"><span class="nav-icon">🎭</span><span>Responder</span></a></li>
+      </ul>
+    </div>
+    <div class="sidebar-footer">SOC Lab v2.0 · OSS</div>
+  </nav>
+
+  <header class="topbar">
+    <div class="topbar-title"><span class="page-icon">📊</span> SOC Overview</div>
+    <span class="topbar-meta" id="last-update">—</span>
+    <div class="topbar-right">
+      <div class="ws-indicator">
+        <div class="ws-dot" id="ws-dot"></div>
+        <span id="ws-label" style="color:var(--text-muted);font-size:11px;">WebSocket</span>
+      </div>
+      <a href="index.html" class="btn btn-ghost btn-sm">← Portal</a>
+    </div>
+  </header>
+
+  <main class="main-content">
+
+    <div class="grid-4 mb-4">
+      <div class="kpi-card critical">
+        <div class="kpi-label">Critical Alerts</div>
+        <div class="kpi-value" id="kpi-crit">3</div>
+        <div class="kpi-sub">24 h window</div>
+      </div>
+      <div class="kpi-card high">
+        <div class="kpi-label">High Severity</div>
+        <div class="kpi-value" id="kpi-high">8</div>
+        <div class="kpi-sub">24 h window</div>
+      </div>
+      <div class="kpi-card medium">
+        <div class="kpi-label">Total Events</div>
+        <div class="kpi-value" id="kpi-total">1,427</div>
+        <div class="kpi-sub">indexed today</div>
+      </div>
+      <div class="kpi-card info">
+        <div class="kpi-label">Active Sensors</div>
+        <div class="kpi-value">6</div>
+        <div class="kpi-sub">all reporting</div>
+      </div>
+    </div>
+
+    <div class="grid-2-1 mb-4">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">🔴 Live Alert Feed</span>
+          <span class="badge badge-critical" id="feed-count">Live</span>
+        </div>
+        <div id="alert-feed" class="alert-feed" style="max-height:380px;overflow-y:auto;"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">⚡ MITRE Techniques</span>
+        </div>
+        <div class="card-body">
+          <div class="chart-wrap" style="height:320px">
+            <canvas id="mitreChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-header"><span class="card-title">📡 Sensor Status</span></div>
+        <div class="card-body-sm">
+          <div class="status-row"><span class="status-label">Zeek NSM</span><span class="status-value"><span class="status-dot up"></span>Running · eth0</span></div>
+          <div class="status-row"><span class="status-label">Suricata IDS</span><span class="status-value"><span class="status-dot up"></span>host · 6 rules</span></div>
+          <div class="status-row"><span class="status-label">Vector Pipeline</span><span class="status-value"><span class="status-dot up"></span>6 sources</span></div>
+          <div class="status-row"><span class="status-label">ElastAlert2</span><span class="status-value"><span class="status-dot up"></span>6 rules · 30s</span></div>
+          <div class="status-row"><span class="status-label">StackStorm SOAR</span><span class="status-value"><span class="status-dot up"></span>3 rules armed</span></div>
+          <div class="status-row"><span class="status-label">OpenSearch</span><span class="status-value"><span class="status-dot up"></span>2-node cluster</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">🎯 Top Source IPs</span></div>
+        <div class="card-body" style="padding-top:var(--space-3)">
+          <table class="data-table">
+            <thead><tr><th>IP Address</th><th>Events</th><th>Severity</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">10.0.0.200</td><td class="mono">47</td><td><span class="badge badge-critical">CRIT</span></td></tr>
+              <tr><td class="mono">192.168.1.105</td><td class="mono">31</td><td><span class="badge badge-critical">CRIT</span></td></tr>
+              <tr><td class="mono">10.0.0.55</td><td class="mono">19</td><td><span class="badge badge-high">HIGH</span></td></tr>
+              <tr><td class="mono">172.20.0.50</td><td class="mono">12</td><td><span class="badge badge-medium">MED</span></td></tr>
+              <tr><td class="mono">10.0.0.100</td><td class="mono">8</td><td><span class="badge badge-low">LOW</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">📦 Event Sources</span></div>
+        <div class="card-body">
+          <div class="chart-wrap" style="height:210px">
+            <canvas id="sourceChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+Chart.defaults.color = '#8898aa';
+Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
+Chart.defaults.font.size = 11;
+
+new Chart(document.getElementById('mitreChart').getContext('2d'), {
+  type: 'bar',
+  data: {
+    labels: ['T1557.001','T1059.001','T1110','T1003.001','T1053.005','T1021.002','T1046','T1041'],
+    datasets: [{
+      label: 'Detections',
+      data: [12, 9, 8, 6, 5, 4, 3, 2],
+      backgroundColor: ['rgba(239,68,68,.75)','rgba(239,68,68,.65)','rgba(249,115,22,.75)',
+        'rgba(239,68,68,.55)','rgba(234,179,8,.65)','rgba(249,115,22,.55)',
+        'rgba(59,130,246,.65)','rgba(59,130,246,.45)'],
+      borderRadius: 4, borderSkipped: false
+    }]
+  },
+  options: {
+    indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { color: 'rgba(31,45,74,.8)' }, ticks: { stepSize: 2 } },
+      y: { grid: { display: false }, ticks: { font: { family: "'JetBrains Mono',monospace", size: 10 } } }
+    }
+  }
+});
+
+new Chart(document.getElementById('sourceChart').getContext('2d'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Sysmon','Zeek','Suricata','Auditd','Cloud','Beats'],
+    datasets: [{
+      data: [38, 22, 18, 12, 6, 4],
+      backgroundColor: ['#3b82f6','#06b6d4','#f97316','#22c55e','#8b5cf6','#eab308'],
+      borderColor: '#141b2d', borderWidth: 2, hoverOffset: 6
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, cutout: '65%',
+    plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 8 } } }
+  }
+});
+
+const ALERTS = [
+  { sev:'critical', title:'T1557.001 · LLMNR/NBNS Poisoning',    meta:'192.168.1.105 → 10.0.0.1 · Responder' },
+  { sev:'critical', title:'T1003.001 · LSASS Memory Dump',       meta:'mimikatz.exe · WORKSTATION-12' },
+  { sev:'high',     title:'T1059.001 · PowerShell EncodedCmd',   meta:'EncodedCommand · WORKSTATION-07' },
+  { sev:'high',     title:'T1110 · Brute Force (47 failures)',   meta:'src:10.0.0.200 → WIN-DC01' },
+  { sev:'high',     title:'T1021.002 · Lateral Move via SMB',    meta:'WORKSTATION-07 → FILESERVER-01' },
+  { sev:'medium',   title:'T1053.005 · Scheduled Task Created',  meta:'\\Microsoft\\Windows\\update · WIN-DC01' },
+  { sev:'medium',   title:'T1046 · Network Port Scan',           meta:'Nmap SYN · 10.0.0.55 · 254 hosts' },
+  { sev:'medium',   title:'T1547.001 · Registry Run Key',        meta:'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run' },
+  { sev:'low',      title:'T1041 · Exfiltration over C2',        meta:'DNS tunneling · iodine-like pattern' },
+];
+
+function tsNow() {
+  const n = new Date();
+  return [n.getHours(),n.getMinutes(),n.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');
+}
+
+function buildItem(a, ts) {
+  return `<div class="alert-item">
+    <div class="alert-dot ${a.sev}"></div>
+    <div class="alert-content">
+      <div class="alert-title">${a.title}</div>
+      <div class="alert-meta"><span>${a.meta}</span></div>
+    </div>
+    <div class="alert-time">${ts||tsNow()}</div>
+  </div>`;
+}
+
+const feed = document.getElementById('alert-feed');
+feed.innerHTML = ALERTS.map((a,i) => {
+  const d = new Date(); d.setSeconds(d.getSeconds() - i*180);
+  return buildItem(a, [d.getHours(),d.getMinutes(),d.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':'));
+}).join('');
+
+let evtIdx = 0;
+function injectFeedItem(data) {
+  const a = data || ALERTS[evtIdx++ % ALERTS.length];
+  const item = document.createElement('div');
+  item.className = 'alert-item new';
+  item.innerHTML = buildItem(a, tsNow()).replace('<div class="alert-item">', '').replace('</div>','');
+  // rebuild cleanly
+  feed.insertAdjacentHTML('afterbegin', `<div class="alert-item new">${buildItem(a, tsNow()).match(/<div class="alert-dot[^>]+>[\s\S]*<\/div>\s*<\/div>/)?.[0]||''}</div>`);
+  // simpler approach:
+  const el = document.createElement('div');
+  el.className = 'alert-item new';
+  el.innerHTML = `
+    <div class="alert-dot ${a.sev}"></div>
+    <div class="alert-content">
+      <div class="alert-title">${a.title}</div>
+      <div class="alert-meta"><span>${a.meta}</span></div>
+    </div>
+    <div class="alert-time">${tsNow()}</div>`;
+  feed.prepend(el);
+  if (feed.children.length > 20) feed.removeChild(feed.lastElementChild);
+  document.getElementById('last-update').textContent = 'Updated ' + tsNow();
+}
+
+// WebSocket
+(function connectWS() {
+  try {
+    const ws = new WebSocket('ws://localhost:8765');
+    const dot = document.getElementById('ws-dot');
+    const lbl = document.getElementById('ws-label');
+    ws.onopen = () => { dot.className='ws-dot connected'; lbl.style.color='var(--low)'; lbl.textContent='Live'; };
+    ws.onclose = () => { dot.className='ws-dot'; lbl.style.color='var(--text-muted)'; lbl.textContent='Offline'; setTimeout(connectWS, 5000); };
+    ws.onmessage = e => {
+      try {
+        const d = JSON.parse(e.data);
+        if (d.type === 'stats') {
+          const el = document.getElementById('kpi-total');
+          if (el) el.textContent = d.event_count > 999 ? (d.event_count/1000).toFixed(1)+'k' : d.event_count;
+        }
+        if (d.hits?.length) d.hits.forEach(h => injectFeedItem({
+          sev: (h._source?.severity||'low').toLowerCase(),
+          title: h._source?.rule_name || 'Alert',
+          meta: `${h._source?.src_ip||''} · ${h._source?.mitre_technique||''}`
+        }));
+      } catch(_) {}
+    };
+  } catch(_) {
+    // Simulate when offline
+    setInterval(() => injectFeedItem(), 10000);
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MITRE Caldera — SOC Lab</title>
+<link rel="stylesheet" href="soc-theme.css">
+</head>
+<body>
+<div class="layout">
+
+  <nav class="sidebar">
+    <div class="sidebar-logo">SOC Lab v2</div>
+    <ul class="sidebar-nav">
+      <li><a href="index.html">⌂ Portal</a></li>
+      <li><a href="01_soc_overview.html">Overview</a></li>
+      <li><a href="02_opensearch_siem.html">OpenSearch SIEM</a></li>
+      <li><a href="03_zeek_network.html">Zeek NSM</a></li>
+      <li><a href="04_suricata_ids.html">Suricata IDS</a></li>
+      <li><a href="05_ai_agents.html">AI Agents</a></li>
+      <li><a href="06_iris_cases.html">DFIR-IRIS</a></li>
+      <li><a href="07_caldera_attack.html" class="active">Caldera</a></li>
+      <li><a href="08_misp_ti.html">MISP Threat Intel</a></li>
+      <li><a href="09_velociraptor.html">Velociraptor</a></li>
+      <li><a href="10_responder_redteam.html">Red Team</a></li>
+    </ul>
+    <div class="sidebar-footer">MITRE ATT&amp;CK v14</div>
+  </nav>
+
+  <div class="main-wrap">
+    <header class="topbar">
+      <span class="topbar-title">MITRE Caldera 5.x — Adversary Emulation</span>
+      <div class="topbar-meta">
+        <span class="status-dot green"></span> Agent active · C2 listening :8888
+      </div>
+    </header>
+
+    <main class="content">
+
+      <div class="kpi-row">
+        <div class="kpi-card critical"><div class="kpi-label">Techniques Run</div><div class="kpi-value" id="run-count">0</div><div class="kpi-sub">This operation</div></div>
+        <div class="kpi-card high"><div class="kpi-label">Detected</div><div class="kpi-value" id="det-count">0</div><div class="kpi-sub">By SIEM/IDS</div></div>
+        <div class="kpi-card"><div class="kpi-label">Missed</div><div class="kpi-value" id="miss-count">0</div><div class="kpi-sub">Coverage gap</div></div>
+        <div class="kpi-card"><div class="kpi-label">Detection Rate</div><div class="kpi-value" id="rate">0%</div><div class="kpi-sub">Blue team score</div></div>
+      </div>
+
+      <!-- Operation selector -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">🎯 Operation Select</span>
+        </div>
+        <div class="card-body" style="display:flex;gap:12px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="loadOp('apt29')">APT-29 Cozy Bear</button>
+          <button class="btn" onclick="loadOp('insider')">Insider Threat</button>
+          <button class="btn" onclick="loadOp('ransomware')">Ransomware Pre-Stage</button>
+        </div>
+      </div>
+
+      <!-- Step list -->
+      <div class="card" style="margin-top:var(--space-4)">
+        <div class="card-header">
+          <span class="card-title" id="op-title">APT-29 — Operation Steps</span>
+          <span class="badge badge-low" id="op-status">READY</span>
+        </div>
+        <div class="card-body">
+          <table class="data-table" id="steps-table">
+            <thead><tr><th>#</th><th>Technique</th><th>Name</th><th>Tactic</th><th>Result</th></tr></thead>
+            <tbody id="steps-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ATT&CK Coverage Matrix -->
+      <div class="card" style="margin-top:var(--space-4)">
+        <div class="card-header"><span class="card-title">🗺️ ATT&amp;CK Coverage Matrix</span></div>
+        <div class="card-body">
+          <div id="matrix" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;font-size:11px"></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script>
+const OPS = {
+  apt29: {
+    title: 'APT-29 Cozy Bear — Operation Steps',
+    steps: [
+      {n:1, tid:'T1566.001', name:'Spearphishing Attachment', tactic:'Initial Access',     result:'detected'},
+      {n:2, tid:'T1059.001', name:'PowerShell Execution',     tactic:'Execution',          result:'detected'},
+      {n:3, tid:'T1053.005', name:'Scheduled Task',           tactic:'Persistence',        result:'detected'},
+      {n:4, tid:'T1547.001', name:'Registry Run Key',         tactic:'Persistence',        result:'partial'},
+      {n:5, tid:'T1003.001', name:'LSASS Memory Dump',        tactic:'Credential Access',  result:'detected'},
+      {n:6, tid:'T1110.001', name:'Password Spray',           tactic:'Credential Access',  result:'detected'},
+      {n:7, tid:'T1557.001', name:'LLMNR Poisoning',          tactic:'Credential Access',  result:'partial'},
+      {n:8, tid:'T1021.002', name:'SMB Lateral Movement',     tactic:'Lateral Movement',   result:'detected'},
+      {n:9, tid:'T1550.002', name:'Pass-the-Hash',            tactic:'Lateral Movement',   result:'detected'},
+      {n:10,tid:'T1046',     name:'Network Port Scan',        tactic:'Discovery',          result:'partial'},
+      {n:11,tid:'T1041',     name:'Exfil over C2 Channel',    tactic:'Exfiltration',       result:'detected'},
+      {n:12,tid:'T1071.004', name:'DNS Tunneling C2',         tactic:'C2',                 result:'detected'},
+      {n:13,tid:'T1562.001', name:'Disable Defender',         tactic:'Defense Evasion',    result:'missed'},
+    ]
+  },
+  insider: {
+    title: 'Insider Threat — Operation Steps',
+    steps: [
+      {n:1, tid:'T1039',     name:'Bulk File Collection',     tactic:'Collection',         result:'partial'},
+      {n:2, tid:'T1560.001', name:'Archive via 7-Zip',        tactic:'Collection',         result:'detected'},
+      {n:3, tid:'T1052.001', name:'USB Exfiltration',         tactic:'Exfiltration',       result:'detected'},
+      {n:4, tid:'T1567.002', name:'Dropbox Upload',           tactic:'Exfiltration',       result:'detected'},
+      {n:5, tid:'T1078',     name:'Valid Accounts — Abuse',   tactic:'Defense Evasion',    result:'partial'},
+      {n:6, tid:'T1114.003', name:'Email Forward Rule',       tactic:'Collection',         result:'missed'},
+      {n:7, tid:'T1133',     name:'External VPN Access',      tactic:'Initial Access',     result:'partial'},
+      {n:8, tid:'T1213',     name:'Data from DB',             tactic:'Collection',         result:'detected'},
+      {n:9, tid:'T1070.004', name:'Log Deletion',             tactic:'Defense Evasion',    result:'missed'},
+    ]
+  },
+  ransomware: {
+    title: 'Ransomware Pre-Stage — Operation Steps',
+    steps: [
+      {n:1, tid:'T1566.001', name:'Phishing Delivery',        tactic:'Initial Access',     result:'detected'},
+      {n:2, tid:'T1059.001', name:'PowerShell Download',      tactic:'Execution',          result:'detected'},
+      {n:3, tid:'T1082',     name:'System Discovery',         tactic:'Discovery',          result:'partial'},
+      {n:4, tid:'T1083',     name:'File & Dir Discovery',     tactic:'Discovery',          result:'missed'},
+      {n:5, tid:'T1486',     name:'Data Encrypted',           tactic:'Impact',             result:'partial'},
+      {n:6, tid:'T1490',     name:'Inhibit System Recovery',  tactic:'Impact',             result:'detected'},
+    ]
+  }
+};
+
+const TACTICS = ['Recon','Initial Access','Execution','Persistence','Privilege Esc','Defense Evasion','Credential Access','Discovery','Lateral Movement','Collection','C2','Exfiltration','Impact'];
+
+function loadOp(key) {
+  const op = OPS[key];
+  document.getElementById('op-title').textContent = op.title;
+  document.getElementById('op-status').textContent = 'COMPLETE';
+  const body = document.getElementById('steps-body');
+  body.innerHTML = '';
+  let detected=0, missed=0;
+  op.steps.forEach(s => {
+    if (s.result==='detected') detected++;
+    if (s.result==='missed') missed++;
+    const cls = s.result==='detected'?'badge-low':s.result==='partial'?'badge-medium':'badge-critical';
+    body.innerHTML += `<tr>
+      <td class="mono">${s.n}</td>
+      <td><span class="technique-tag">${s.tid}</span></td>
+      <td>${s.name}</td>
+      <td style="color:var(--text-muted)">${s.tactic}</td>
+      <td><span class="badge ${cls}">${s.result.toUpperCase()}</span></td>
+    </tr>`;
+  });
+  const total = op.steps.length;
+  document.getElementById('run-count').textContent = total;
+  document.getElementById('det-count').textContent = detected;
+  document.getElementById('miss-count').textContent = missed;
+  document.getElementById('rate').textContent = Math.round(detected/total*100) + '%';
+}
+
+// ATT&CK matrix
+const COVERAGE = {
+  'T1566':'detected','T1059':'detected','T1053':'detected','T1547':'partial',
+  'T1003':'detected','T1110':'detected','T1557':'partial','T1021':'detected',
+  'T1550':'detected','T1046':'partial','T1041':'detected','T1071':'detected',
+  'T1562':'missed','T1039':'partial','T1560':'detected','T1052':'detected',
+  'T1567':'detected','T1078':'partial','T1114':'missed','T1133':'partial',
+  'T1213':'detected','T1070':'missed','T1082':'partial','T1083':'missed',
+  'T1486':'partial','T1490':'detected','T1078.003':'partial'
+};
+const matrix = document.getElementById('matrix');
+TACTICS.forEach(t => {
+  const h = document.createElement('div');
+  h.style.cssText = 'background:rgba(255,255,255,0.05);padding:6px 4px;text-align:center;border-radius:4px;color:#94a3b8;font-size:10px;font-weight:600';
+  h.textContent = t;
+  matrix.appendChild(h);
+});
+const techniques = Object.keys(COVERAGE);
+techniques.forEach(tid => {
+  const c = COVERAGE[tid];
+  const bg = c==='detected'?'rgba(34,197,94,0.25)':c==='partial'?'rgba(234,179,8,0.25)':'rgba(239,68,68,0.25)';
+  const border = c==='detected'?'#22c55e':c==='partial'?'#eab308':'#ef4444';
+  const cell = document.createElement('div');
+  cell.style.cssText = `background:${bg};border:1px solid ${border};border-radius:4px;padding:4px;text-align:center;font-size:10px;color:#e2e8f0;cursor:default`;
+  cell.title = c;
+  cell.textContent = tid;
+  matrix.appendChild(cell);
+});
+
+loadOp('apt29');
+</script>
+</body>
+</html>

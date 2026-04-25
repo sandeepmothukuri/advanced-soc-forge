@@ -1,0 +1,22 @@
+title: Malicious Scheduled Task Creation
+id: c4f8d2e5-6b3a-4c0f-d8e3-4g0f3b8e5c1f
+status: production
+description: Detects creation of suspicious scheduled tasks for persistence
+author: SOC Lab
+tags: [attack.persistence, attack.t1053.005]
+logsource:
+  product: windows
+  service: security
+detection:
+  selection:
+    EventID: 4698
+  keywords:
+    CommandLine|contains:
+      - 'powershell'
+      - 'wscript'
+      - 'cscript'
+      - 'mshta'
+      - 'rundll32'
+      - 'regsvr32'
+  condition: selection and keywords
+level: high

@@ -1,0 +1,77 @@
+## SOC Lab auditd rules — Linux endpoint detection
+## Place at /etc/audit/rules.d/soc-lab.rules
+## Covers: MITRE ATT&CK T1059, T1548, T1003, T1070, T1021, T1053
+
+## ── Remove existing rules ────────────────────────────────────────────────────
+-D
+
+## ── Buffer size ───────────────────────────────────────────────────────────────
+-b 8192
+-f 1
+
+## ── Identity changes (T1136 — Account Creation) ──────────────────────────────
+-w /etc/passwd  -p wa -k identity_change
+-w /etc/shadow  -p wa -k identity_change
+-w /etc/group   -p wa -k identity_change
+-w /etc/sudoers -p wa -k privilege_escalation
+-w /etc/sudoers.d/ -p wa -k privilege_escalation
+
+## ── Privilege escalation (T1548.001 — SUID/SGID) ────────────────────────────
+-a always,exit -F arch=b64 -S setuid    -k privilege_escalation
+-a always,exit -F arch=b64 -S setgid    -k privilege_escalation
+-a always,exit -F arch=b64 -S chmod     -F a1=4755 -k suid_set
+-a always,exit -F arch=b64 -S chown     -k file_ownership
+
+## ── Credential access (T1003 — /etc/shadow reads) ────────────────────────────
+-a always,exit -F path=/etc/shadow  -F perm=r -k credential_access
+-a always,exit -F path=/etc/passwd  -F perm=r -k credential_access
+-a always,exit -F path=/etc/gshadow -F perm=r -k credential_access
+
+## ── Command execution (T1059 — shells) ───────────────────────────────────────
+-a always,exit -F arch=b64 -S execve -k execution
+-a always,exit -F arch=b32 -S execve -k execution
+
+## ── Network connections (T1021 — remote access) ──────────────────────────────
+-a always,exit -F arch=b64 -S socket   -F a0=2  -k network_socket
+-a always,exit -F arch=b64 -S connect           -k network_connect
+-a always,exit -F arch=b64 -S bind     -F a1!=0 -k network_bind
+
+## ── Persistence (T1053.003 — cron) ──────────────────────────────────────────
+-w /etc/cron.d/        -p wa -k persistence_cron
+-w /etc/cron.daily/    -p wa -k persistence_cron
+-w /etc/cron.hourly/   -p wa -k persistence_cron
+-w /var/spool/cron/    -p wa -k persistence_cron
+-w /etc/anacrontab     -p wa -k persistence_cron
+
+## ── Persistence (T1543.002 — systemd services) ───────────────────────────────
+-w /etc/systemd/system/  -p wa -k persistence_service
+-w /usr/lib/systemd/     -p wa -k persistence_service
+-w /lib/systemd/system/  -p wa -k persistence_service
+
+## ── Defense evasion (T1070 — log deletion) ───────────────────────────────────
+-w /var/log/ -p wa -k log_modification
+-a always,exit -F arch=b64 -S truncate -F exit=-EACCES -k log_modification
+
+## ── Lateral movement tools ────────────────────────────────────────────────────
+-w /usr/bin/ssh     -p x -k lateral_movement_ssh
+-w /usr/bin/scp     -p x -k lateral_movement_ssh
+-w /usr/bin/rsync   -p x -k lateral_movement_ssh
+
+## ── Reconnaissance tools ──────────────────────────────────────────────────────
+-w /usr/bin/nmap    -p x -k recon_scan
+-w /usr/bin/netstat -p x -k recon_netstat
+-w /usr/bin/ss      -p x -k recon_netstat
+
+## ── Package management (T1072 — software deployment) ────────────────────────
+-w /usr/bin/apt     -p x -k package_install
+-w /usr/bin/apt-get -p x -k package_install
+-w /usr/bin/pip3    -p x -k package_install
+-w /usr/bin/curl    -p x -k download_tool
+-w /usr/bin/wget    -p x -k download_tool
+
+## ── Docker container escape (T1611) ──────────────────────────────────────────
+-w /usr/bin/docker -p x -k container_escape
+-w /proc/1/ns/     -p r  -k container_escape
+
+## ── Make rules immutable (comment out during initial tuning) ─────────────────
+# -e 2

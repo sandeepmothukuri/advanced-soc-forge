@@ -1,0 +1,82 @@
+# Filebeat — Linux endpoint log shipper → Vector → OpenSearch
+# Collects: auditd, syslog, auth.log, bash history, container logs
+
+filebeat.inputs:
+
+  # Auditd logs
+  - type: log
+    id: auditd
+    paths: [/var/log/audit/audit.log]
+    fields:
+      log_source: linux_auditd
+      sensor_type: endpoint
+    fields_under_root: true
+    processors:
+      - add_tags:
+          tags: [auditd, linux]
+
+  # Authentication logs
+  - type: log
+    id: auth
+    paths:
+      - /var/log/auth.log
+      - /var/log/secure
+    fields:
+      log_source: linux_auth
+      sensor_type: endpoint
+    fields_under_root: true
+    multiline.pattern: '^[A-Z][a-z]{2}\s'
+    multiline.negate: true
+    multiline.match: after
+
+  # Syslog
+  - type: log
+    id: syslog
+    paths:
+      - /var/log/syslog
+      - /var/log/messages
+    fields:
+      log_source: linux_syslog
+      sensor_type: endpoint
+    fields_under_root: true
+
+  # Docker container logs (if host runs containers)
+  - type: container
+    id: docker
+    paths:
+      - /var/lib/docker/containers/*/*.log
+    fields:
+      log_source: container
+      sensor_type: endpoint
+    fields_under_root: true
+
+  # Bash history (near-real-time via tail — 1s interval)
+  - type: log
+    id: bash_history
+    paths:
+      - /root/.bash_history
+      - /home/*/.bash_history
+    fields:
+      log_source: bash_history
+      sensor_type: endpoint
+    fields_under_root: true
+    scan_frequency: 1s
+
+processors:
+  - add_host_metadata:
+      when.not.contains.tags: forwarded
+  - add_fields:
+      target: ""
+      fields:
+        environment: lab
+        soc_version: "2.0"
+
+output.logstash:
+  hosts: ["${VECTOR_HOST:vector}:5044"]
+
+logging.level: warning
+logging.to_files: true
+logging.files:
+  path: /var/log/filebeat
+  name: filebeat
+  keepfiles: 3

