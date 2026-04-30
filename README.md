@@ -1,5 +1,7 @@
 # Advanced SOC Lab v2.0
 
+[![CI](https://github.com/sandeepmothukuri/advanced-soc-lab-v2.0/actions/workflows/soc-lab-ci.yml/badge.svg)](https://github.com/sandeepmothukuri/advanced-soc-lab-v2.0/actions) [![Website](https://img.shields.io/badge/Website-cybertechnology.in-blue)](https://cybertechnology.in) [![MITRE ATT&CK](https://img.shields.io/badge/MITRE-ATT%26CK-red)](https://attack.mitre.org/)
+
 > A hands-on, fully open-source Security Operations Center lab running 12 production-grade tools via Docker Compose. Built for SOC Level 2/3 analyst training, blue team skill development, and adversary emulation — all on a single machine.
 
 **Author:** Sandeep Mothukuri  
@@ -512,7 +514,9 @@ Built as a hands-on SOC training environment for blue team skill development, th
 
 **Sandeep Mothukuri**
 - GitHub: [@sandeepmothukuri](https://github.com/sandeepmothukuri)
-- Portfolio: [github.com/sandeepmothukuri](https://github.com/sandeepmothukuri)
+- Website: [cybertechnology.in](https://cybertechnology.in)
+- LinkedIn: [linkedin.com/in/sandeepmothukuris](https://www.linkedin.com/in/sandeepmothukuris)
+- Email: sandeep.mothukuris@gmail.com
 
 ---
 
