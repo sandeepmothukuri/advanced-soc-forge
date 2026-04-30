@@ -154,7 +154,7 @@ Internet / Lab Network
 ### Step 1 — Clone the Repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/advanced-soc-lab-v2.git
+git clone https://github.com/sandeepmothukuri/advanced-soc-forge.git
 cd advanced-soc-lab-v2
 ```
 
